@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AutoReach Hub | Excel to WhatsApp & Email Automation</title>
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- Header / Navbar -->
+  <header class="app-header">
+    <div class="brand-section">
+      <div class="brand-logo">
+        <i data-lucide="send" class="brand-icon"></i>
+      </div>
+      <div>
+        <h1 class="brand-title">AutoReach <span>Hub</span></h1>
+        <p class="brand-subtitle">Smart Excel Dispatcher for WhatsApp & Email (LUMS M365 / SMTP)</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <!-- M365 Auth Status Pill -->
+      <div id="m365-status-card" class="auth-pill not-authenticated" onclick="openM365Modal()">
+        <span class="status-dot"></span>
+        <span id="m365-status-text">LUMS / M365: Connect</span>
+        <i data-lucide="chevron-right" class="mini-icon"></i>
+      </div>
+
+      <!-- Quick Help / Config button -->
+      <button class="icon-btn" onclick="openSettingsModal()" title="Email & System Settings">
+        <i data-lucide="settings"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="app-main">
+    
+    <!-- Top Step Progress Indicator -->
+    <section class="steps-bar">
+      <div class="step-item active" id="step-nav-1">
+        <span class="step-num">1</span>
+        <span class="step-label">Upload Contacts</span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step-item" id="step-nav-2">
+        <span class="step-num">2</span>
+        <span class="step-label">Compose Messages</span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step-item" id="step-nav-3">
+        <span class="step-num">3</span>
+        <span class="step-label">Review & Dispatch</span>
+      </div>
+    </section>
+
+    <!-- Content Grid -->
+    <div class="workspace-grid">
+      
+      <!-- Left Column: Setup & Templates -->
+      <div class="col-panel config-panel">
+        
+        <!-- Card 1: File Upload & Mapping -->
+        <div class="glass-card">
+          <div class="card-header">
+            <div class="card-title">
+              <i data-lucide="file-spreadsheet" class="card-icon text-indigo"></i>
+              <span>1. Contact Source</span>
+            </div>
+            <button class="btn btn-sm btn-subtle" onclick="loadSampleData()" id="btn-load-sample">
+              <i data-lucide="sparkles"></i> Load Sample Data
+            </button>
+          </div>
+
+          <div class="card-body">
+            <!-- Dropzone -->
+            <div class="dropzone" id="file-dropzone">
+              <input type="file" id="file-input" accept=".xlsx, .xls, .csv" style="display: none;" />
+              <i data-lucide="upload-cloud" class="dropzone-icon"></i>
+              <p class="dropzone-text"><strong>Click to upload</strong> or drag & drop</p>
+              <p class="dropzone-sub">Excel (.xlsx, .xls) or CSV files supported</p>
+            </div>
+
+            <div id="file-loaded-info" class="file-badge hidden">
+              <i data-lucide="check-circle-2" class="text-emerald"></i>
+              <span id="loaded-filename">sample_contacts.xlsx</span>
+              <span class="badge" id="loaded-count">5 contacts</span>
+            </div>
+
+            <!-- Country code & column options -->
+            <div class="form-row mt-3">
+              <div class="form-group flex-1">
+                <label for="country-code-select">Default Country Code</label>
+                <select id="country-code-select" class="form-control" onchange="onCountryCodeChange()">
+                  <option value="92" selected>🇵🇰 Pakistan (+92)</option>
+                  <option value="1">🇺🇸 USA / Canada (+1)</option>
+                  <option value="44">🇬🇧 UK (+44)</option>
+                  <option value="971">🇦🇪 UAE (+971)</option>
+                  <option value="966">🇸🇦 Saudi Arabia (+966)</option>
+                  <option value="91">🇮🇳 India (+91)</option>
+                  <option value="custom">Other / Custom</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Auto-detected Column Mappings Accordion -->
+            <div id="column-mapping-section" class="mt-3 hidden">
+              <div class="accordion-toggle" onclick="toggleColumnMapping()">
+                <span class="text-muted"><i data-lucide="sliders" class="mini-icon"></i> Column Mapping (Auto-detected)</span>
+                <i data-lucide="chevron-down" id="mapping-chevron"></i>
+              </div>
+              <div id="mapping-body" class="mapping-body hidden">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Name Column</label>
+                    <select id="map-name" class="form-control" onchange="applyRemap()"></select>
+                  </div>
+                  <div class="form-group">
+                    <label>Phone / WhatsApp</label>
+                    <select id="map-phone" class="form-control" onchange="applyRemap()"></select>
+                  </div>
+                  <div class="form-group">
+                    <label>Email Column</label>
+                    <select id="map-email" class="form-control" onchange="applyRemap()"></select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Message Composer -->
+        <div class="glass-card mt-4">
+          <div class="card-header">
+            <div class="card-title">
+              <i data-lucide="message-square" class="card-icon text-violet"></i>
+              <span>2. Message Composer</span>
+            </div>
+            <!-- Tabs for Email vs WhatsApp -->
+            <div class="tab-group">
+              <button class="tab-btn active" id="tab-btn-email" onclick="switchComposerTab('email')">
+                <i data-lucide="mail"></i> Email
+              </button>
+              <button class="tab-btn" id="tab-btn-whatsapp" onclick="switchComposerTab('whatsapp')">
+                <i data-lucide="message-circle"></i> WhatsApp
+              </button>
+            </div>
+          </div>
+
+          <div class="card-body">
+            <!-- Available Placeholders Pills -->
+            <div class="placeholder-container">
+              <span class="placeholder-label"><i data-lucide="tag" class="mini-icon"></i> Click tag to insert:</span>
+              <div class="tags-wrapper" id="available-tags">
+                <span class="tag-pill" onclick="insertTag('{Name}')">{Name}</span>
+                <span class="tag-pill" onclick="insertTag('{Email}')">{Email}</span>
+                <span class="tag-pill" onclick="insertTag('{Phone}')">{Phone}</span>
+              </div>
+            </div>
+
+            <!-- Email Composer Section -->
+            <div id="composer-email-section" class="composer-section">
+              <div class="form-group">
+                <label for="email-subject-input">Email Subject</label>
+                <input type="text" id="email-subject-input" class="form-control" value="Update for {Name} - {CourseName}" oninput="updateLivePreview()" />
+              </div>
+              <div class="form-group">
+                <label for="email-body-input">Email Body (Plain text or HTML)</label>
+                <textarea id="email-body-input" class="form-control code-font" rows="6" oninput="updateLivePreview()">Hello {Name},
+
+This is an official update regarding your course {CourseName}.
+Your session is scheduled for {MeetingTime}.
+
+Best regards,
+LUMS Department</textarea>
+              </div>
+            </div>
+
+            <!-- WhatsApp Composer Section -->
+            <div id="composer-whatsapp-section" class="composer-section hidden">
+              <div class="form-group">
+                <label for="whatsapp-body-input">WhatsApp Message Text</label>
+                <textarea id="whatsapp-body-input" class="form-control" rows="6" oninput="updateLivePreview()">Hello {Name}! 👋
+Your session for {CourseName} is scheduled for {MeetingTime}.
+Please reach out if you have any questions.</textarea>
+              </div>
+            </div>
+
+            <!-- Live Preview Card -->
+            <div class="live-preview-card">
+              <div class="preview-header">
+                <div class="preview-badge">
+                  <span class="pulse-dot"></span> Live Preview for Contact #<span id="preview-contact-num">1</span> (<span id="preview-contact-name">Ali Khan</span>)
+                </div>
+                <div class="preview-nav">
+                  <button class="mini-btn" onclick="navPreviewContact(-1)" title="Previous Contact"><i data-lucide="chevron-left"></i></button>
+                  <button class="mini-btn" onclick="navPreviewContact(1)" title="Next Contact"><i data-lucide="chevron-right"></i></button>
+                </div>
+              </div>
+              <div class="preview-body" id="preview-display">
+                <!-- Dynamically updated -->
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Column: Dispatch & Contacts Table -->
+      <div class="col-panel contacts-panel">
+        
+        <!-- Summary Stats & Channel Selector Card -->
+        <div class="glass-card">
+          <div class="dispatch-toolbar">
+            <!-- Channel Switcher -->
+            <div class="channel-toggle-box">
+              <label class="channel-label">Email Dispatch Method:</label>
+              <div class="toggle-switch-container">
+                <button class="toggle-option active" id="channel-opt-graph" onclick="setEmailChannel('graph')">
+                  <i data-lucide="shield-check"></i> LUMS M365 (Graph API)
+                </button>
+                <button class="toggle-option" id="channel-opt-smtp" onclick="setEmailChannel('smtp')">
+                  <i data-lucide="server"></i> Standard SMTP (Gmail/Custom)
+                </button>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="bulk-actions">
+              <button class="btn btn-primary" id="btn-send-all-emails" onclick="sendAllEmails()">
+                <i data-lucide="send"></i> Send All Emails
+              </button>
+              <button class="btn btn-whatsapp" id="btn-launch-whatsapp" onclick="openAllWhatsApp()">
+                <i data-lucide="message-circle"></i> Launch All WhatsApp
+              </button>
+            </div>
+          </div>
+
+          <!-- Quick Metrics Bar -->
+          <div class="metrics-row">
+            <div class="metric-item">
+              <span class="metric-val" id="metric-total">0</span>
+              <span class="metric-lbl">Total Contacts</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-val text-emerald" id="metric-valid-email">0</span>
+              <span class="metric-lbl">Valid Emails</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-val text-emerald" id="metric-valid-phone">0</span>
+              <span class="metric-lbl">Valid Numbers</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-val text-indigo" id="metric-sent">0</span>
+              <span class="metric-lbl">Emails Sent</span>
+            </div>
+          </div>
+
+          <!-- Progress Bar (hidden by default) -->
+          <div id="batch-progress-container" class="progress-box hidden">
+            <div class="progress-meta">
+              <span id="progress-status-text">Sending emails... (0/0)</span>
+              <span id="progress-percent">0%</span>
+            </div>
+            <div class="progress-bar-track">
+              <div id="progress-bar-fill" class="progress-bar-fill" style="width: 0%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contacts Interactive Table -->
+        <div class="glass-card mt-4 flex-1">
+          <div class="card-header">
+            <div class="card-title">
+              <i data-lucide="users" class="card-icon text-teal"></i>
+              <span>3. Contact Roster & Live Dispatch</span>
+            </div>
+            <div class="table-search">
+              <i data-lucide="search" class="search-icon"></i>
+              <input type="text" id="search-contacts" placeholder="Search contacts..." oninput="filterContactsTable()" />
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="data-table" id="contacts-table">
+              <thead>
+                <tr>
+                  <th width="40">#</th>
+                  <th>Name</th>
+                  <th>Phone / WhatsApp</th>
+                  <th>Email</th>
+                  <th>Status</th>
+                  <th width="190" class="text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="contacts-table-body">
+                <tr>
+                  <td colspan="6" class="empty-state">
+                    <i data-lucide="inbox" class="empty-icon"></i>
+                    <p>No contacts loaded yet. Upload an Excel file or click "Load Sample Data".</p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Activity Log Console -->
+        <div class="glass-card mt-4 log-card">
+          <div class="card-header cursor-pointer" onclick="toggleLogConsole()">
+            <div class="card-title text-sm">
+              <i data-lucide="terminal" class="card-icon"></i>
+              <span>Activity & Dispatch Logs</span>
+            </div>
+            <div class="log-actions">
+              <button class="mini-btn" onclick="clearLogs(event)" title="Clear Logs"><i data-lucide="trash-2"></i></button>
+              <i data-lucide="chevron-down" id="log-chevron"></i>
+            </div>
+          </div>
+          <div class="log-body" id="log-console">
+            <div class="log-entry log-info">[System] AutoReach Hub ready. Connect your LUMS account or load an Excel sheet.</div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Modal 1: Microsoft 365 / LUMS Authentication Modal -->
+  <div class="modal-overlay hidden" id="m365-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i data-lucide="shield" class="text-indigo"></i>
+          <span>LUMS Microsoft 365 Sign-In</span>
+        </div>
+        <button class="close-btn" onclick="closeM365Modal()"><i data-lucide="x"></i></button>
+      </div>
+
+      <div class="modal-body" id="m365-modal-body">
+        <div class="auth-flow-info">
+          <p>Sign in securely with your official <strong>@lums.edu.pk</strong> account via Microsoft Device Code Flow (OAuth 2.0 with MFA/SSO).</p>
+          <div class="notice-box">
+            <i data-lucide="info" class="text-indigo"></i>
+            <span>Emails sent will automatically save to your official LUMS <strong>Sent Items</strong> folder!</span>
+          </div>
+        </div>
+
+        <!-- Unauthenticated State -->
+        <div id="m365-unauth-view">
+          <button class="btn btn-primary btn-block mt-3" onclick="startDeviceLogin()" id="btn-start-m365">
+            <i data-lucide="log-in"></i> Generate Login Code
+          </button>
+
+          <div id="device-code-display" class="device-code-box hidden mt-4">
+            <p class="code-instruction">1. Copy your one-time code:</p>
+            <div class="code-pill-row">
+              <span class="user-code-pill" id="m365-user-code">ABCD-EFGH</span>
+              <button class="btn btn-sm btn-subtle" onclick="copyDeviceCode()">
+                <i data-lucide="copy"></i> Copy
+              </button>
+            </div>
+            <p class="code-instruction mt-3">2. Open Microsoft Login in your browser & paste code:</p>
+            <a href="https://microsoft.com/devicelogin" target="_blank" class="btn btn-emerald btn-block mt-2" id="m365-login-link">
+              <i data-lucide="external-link"></i> Open microsoft.com/devicelogin
+            </a>
+            <div class="polling-indicator mt-3">
+              <span class="spinner"></span>
+              <span>Waiting for you to sign in on Microsoft...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Authenticated State -->
+        <div id="m365-auth-view" class="hidden">
+          <div class="user-profile-card">
+            <div class="avatar-circle">
+              <i data-lucide="user-check"></i>
+            </div>
+            <div class="user-info-text">
+              <h3 id="auth-display-name">Muhammad Omer Farooq</h3>
+              <p id="auth-email">omer_farooq@lums.edu.pk</p>
+              <span class="badge badge-emerald">Connected & Verified</span>
+            </div>
+          </div>
+          <button class="btn btn-danger btn-block mt-4" onclick="logoutM365()">
+            <i data-lucide="log-out"></i> Disconnect / Sign Out
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: SMTP Settings Modal -->
+  <div class="modal-overlay hidden" id="settings-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i data-lucide="server" class="text-violet"></i>
+          <span>SMTP Configuration (Gmail / Custom)</span>
+        </div>
+        <button class="close-btn" onclick="closeSettingsModal()"><i data-lucide="x"></i></button>
+      </div>
+
+      <div class="modal-body">
+        <p class="text-muted text-sm mb-3">Use if you wish to send emails via Gmail (with App Password) or your custom SMTP server.</p>
+
+        <div class="form-row">
+          <div class="form-group flex-2">
+            <label>SMTP Server</label>
+            <input type="text" id="smtp-server" class="form-control" value="smtp.gmail.com" />
+          </div>
+          <div class="form-group flex-1">
+            <label>Port</label>
+            <input type="number" id="smtp-port" class="form-control" value="587" />
+          </div>
+        </div>
+
+        <div class="form-row mt-2">
+          <div class="form-group flex-1">
+            <label>Username / Email</label>
+            <input type="email" id="smtp-user" class="form-control" placeholder="your_email@gmail.com" />
+          </div>
+          <div class="form-group flex-1">
+            <label>Password / App Password</label>
+            <input type="password" id="smtp-pass" class="form-control" placeholder="••••••••••••••••" />
+          </div>
+        </div>
+
+        <div class="form-row mt-2">
+          <div class="form-group flex-1">
+            <label>Sender Display Name</label>
+            <input type="text" id="smtp-from-name" class="form-control" value="LUMS Dispatcher" />
+          </div>
+          <div class="form-group flex-1">
+            <label>Reply-To Address</label>
+            <input type="email" id="smtp-reply-to" class="form-control" placeholder="your_email@lums.edu.pk" />
+          </div>
+        </div>
+
+        <div class="form-row mt-3 items-center">
+          <label class="checkbox-label">
+            <input type="checkbox" id="smtp-use-tls" checked /> Use STARTTLS (Port 587)
+          </label>
+          <label class="checkbox-label ml-4">
+            <input type="checkbox" id="smtp-use-ssl" /> Use SSL (Port 465)
+          </label>
+        </div>
+
+        <div class="modal-footer-actions mt-4">
+          <button class="btn btn-subtle" onclick="testSMTPConnection()" id="btn-test-smtp">
+            <i data-lucide="activity"></i> Test Connection
+          </button>
+          <button class="btn btn-primary" onclick="saveSMTPSettings()">
+            <i data-lucide="check"></i> Save Settings
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="/static/app.js"></script>
+</body>
+</html>
