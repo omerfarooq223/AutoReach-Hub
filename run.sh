@@ -40,5 +40,5 @@ echo "Press Ctrl+C to stop the server anytime."
 echo "=================================================="
 echo ""
 
-# Start the Flask app
-python3 app.py
+# Start the application
+python3 main.py

@@ -6,8 +6,7 @@ from email.utils import formataddr
 from email.header import Header
 from typing import Dict, Any, Optional
 
-
-from config import (
+from ..config import (
     SMTP_SERVER, SMTP_PORT, SMTP_USE_SSL, SMTP_USE_TLS,
     SMTP_USERNAME, SMTP_PASSWORD, DEFAULT_FROM_NAME, DEFAULT_REPLY_TO
 )
@@ -109,4 +108,3 @@ class SMTPMailHandler:
             return {"success": True}
         except Exception as e:
             return {"success": False, "error": str(e)}
-

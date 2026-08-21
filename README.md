@@ -92,8 +92,9 @@ source .venv/bin/activate       # On Windows use: .venv\Scripts\activate
 # 2. Install dependencies
 pip install -r requirements.txt
 
-# 3. Start the Flask application
-python3 app.py
+# 3. Start the application (Web UI or CLI)
+python3 main.py                 # Launches Web Dashboard
+python3 main.py --cli --help    # Or run via Command-Line Interface
 ```
 Visit **`http://127.0.0.1:8080`** in your browser.
 
@@ -165,28 +166,39 @@ AutoReach Hub binds to `0.0.0.0`, allowing you to operate campaigns from your sm
 
 ```
 AutoReach-Hub/
-├── ai_handler.py            # Google Gemini AI copy generation & prompt engine
-├── app.py                   # Flask REST API backend & static file server
-├── cli.py                   # Interactive Command-Line Interface (CLI)
-├── config.py                # Environment and application settings
-├── excel_handler.py         # Multi-category parser, column matcher & sanitization engine
-├── graph_mail_handler.py    # Microsoft Graph API OAuth2 Device Code dispatcher
-├── smtp_handler.py          # SMTP email handler with UTF-8 multi-part support
-├── whatsapp_handler.py      # WhatsApp Click-to-Chat URL generator with UTF-8 encoding
-├── test_automation.py       # Comprehensive unit test suite
-├── requirements.txt         # Core Python dependencies
-├── .env.example             # Template for environment configuration
-├── run.sh                   # 1-Click launcher for macOS & Linux
-├── run.bat                  # 1-Click launcher for Windows
-├── templates/
-│   └── index.html           # Modern glassmorphic web dashboard
-├── static/
-│   ├── style.css            # Dark mode glassmorphism design system
-│   ├── app.js               # Frontend application controller
-│   ├── favicon.svg          # Brand favicon
-│   └── lucide.min.js        # Bundled offline Lucide icon set
-└── docs/
-    └── screenshots/         # Dashboard previews & visual assets
+├── src/
+│   └── autoreach/
+│       ├── __init__.py          # Package initialization
+│       ├── config.py            # Environment & app settings
+│       ├── app.py               # Flask REST backend server
+│       ├── cli.py               # Command-line interface
+│       ├── core/                # Data processing & AI
+│       │   ├── __init__.py
+│       │   ├── excel_handler.py # Excel/CSV parser, column matcher & category engine
+│       │   └── ai_handler.py    # Google Gemini AI prompt generation & copywriter
+│       ├── dispatchers/         # Multi-channel delivery providers
+│       │   ├── __init__.py
+│       │   ├── graph_mail.py    # Microsoft Graph API OAuth2 Device Code
+│       │   ├── smtp_mail.py     # SMTP multi-part & custom headers
+│       │   └── whatsapp.py      # WhatsApp Click-to-Chat & Batch URL engine
+│       ├── static/              # Dashboard UI stylesheets, scripts & icons
+│       │   ├── style.css
+│       │   ├── app.js
+│       │   ├── favicon.svg
+│       │   └── lucide.min.js
+│       └── templates/           # HTML dashboard templates
+│           └── index.html
+├── tests/
+│   ├── __init__.py
+│   └── test_automation.py       # Unit test suite
+├── docs/
+│   └── screenshots/             # Visual previews & documentation assets
+├── main.py                      # Unified root entrypoint (Web UI & CLI)
+├── requirements.txt             # Dependencies
+├── .env.example                 # Environment configuration template
+├── run.sh                       # 1-Click launcher for macOS & Linux
+├── run.bat                      # 1-Click launcher for Windows
+└── README.md                    # Project documentation
 ```
 
 ---
@@ -196,7 +208,7 @@ AutoReach-Hub/
 Run the built-in test suite to verify data normalization, category handling, and dispatch engines:
 
 ```bash
-python3 -m unittest test_automation.py
+python3 -m unittest discover -s tests
 ```
 
 ---

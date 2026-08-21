@@ -47,7 +47,7 @@ def generate_batch_links(contacts: List[Dict[str, Any]], template: str) -> List[
     """
     Generates WhatsApp URLs for a list of contacts based on a message template.
     """
-    from excel_handler import render_message_template
+    from ..core.excel_handler import render_message_template
 
     results = []
     for contact in contacts:
@@ -72,7 +72,7 @@ def open_batch_in_desktop(contacts: List[Dict[str, Any]], template: str, delay: 
     """
     Opens WhatsApp chats sequentially on the local machine using OS default browser.
     """
-    from excel_handler import render_message_template
+    from ..core.excel_handler import render_message_template
 
     opened = 0
     for contact in contacts:
@@ -84,5 +84,3 @@ def open_batch_in_desktop(contacts: List[Dict[str, Any]], template: str, delay: 
             opened += 1
         time.sleep(delay)
     return opened
-
-

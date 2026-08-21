@@ -1,9 +1,24 @@
 import unittest
 import tempfile
 import os
+import sys
+from pathlib import Path
+
+# Add src to sys.path
+SRC_DIR = Path(__file__).resolve().parent.parent / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+
 import pandas as pd
-from excel_handler import clean_phone_number, clean_email, auto_detect_columns, render_message_template, load_contacts_file
-from whatsapp_handler import generate_whatsapp_url, generate_whatsapp_app_url
+from autoreach.core.excel_handler import (
+    clean_phone_number,
+    clean_email,
+    auto_detect_columns,
+    render_message_template,
+    load_contacts_file
+)
+from autoreach.dispatchers.whatsapp import generate_whatsapp_url, generate_whatsapp_app_url
+
 
 class TestAutomationCore(unittest.TestCase):
     def test_phone_cleaning_pakistan(self):
@@ -80,7 +95,6 @@ class TestAutomationCore(unittest.TestCase):
             if os.path.exists(temp_path):
                 os.remove(temp_path)
 
+
 if __name__ == "__main__":
     unittest.main()
-
-

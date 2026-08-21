@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Dict, Any, Optional, List
 import msal
 
-from config import MS_CLIENT_ID, MS_AUTHORITY, MS_SCOPES, TOKEN_CACHE_FILE
+from ..config import MS_CLIENT_ID, MS_AUTHORITY, MS_SCOPES, TOKEN_CACHE_FILE
 
 
 class MicrosoftGraphMailHandler:
@@ -145,7 +145,7 @@ class MicrosoftGraphMailHandler:
         """
         token = self.get_cached_token()
         if not token:
-            return {"success": False, "error": "Not authenticated. Please sign in with your LUMS/Microsoft account."}
+            return {"success": False, "error": "Not authenticated. Please sign in with your Microsoft account."}
 
         url = "https://graph.microsoft.com/v1.0/me/sendMail"
         headers = {
@@ -179,7 +179,6 @@ class MicrosoftGraphMailHandler:
             },
             "saveToSentItems": "true" if save_to_sent_items else "false"
         }
-
 
         try:
             resp = requests.post(url, headers=headers, json=payload, timeout=20)

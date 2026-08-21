@@ -5,18 +5,28 @@ from typing import Dict, Any
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from werkzeug.utils import secure_filename
 
-from config import (
-    UPLOAD_DIR, DEFAULT_COUNTRY_CODE,
+from .config import (
+    UPLOAD_DIR, DEFAULT_COUNTRY_CODE, PACKAGE_DIR,
     SMTP_SERVER, SMTP_PORT, SMTP_USE_SSL, SMTP_USE_TLS,
     SMTP_USERNAME, SMTP_PASSWORD, DEFAULT_FROM_NAME, DEFAULT_REPLY_TO
 )
-from excel_handler import load_contacts_file, render_message_template
-from graph_mail_handler import MicrosoftGraphMailHandler
-from smtp_handler import SMTPMailHandler
-from whatsapp_handler import generate_whatsapp_url, generate_whatsapp_app_url, generate_batch_links
-from ai_handler import GeminiAIHandler
+from .core.excel_handler import load_contacts_file, render_message_template
+from .core.ai_handler import GeminiAIHandler
+from .dispatchers.graph_mail import MicrosoftGraphMailHandler
+from .dispatchers.smtp_mail import SMTPMailHandler
+from .dispatchers.whatsapp import (
+    generate_whatsapp_url,
+    generate_whatsapp_app_url,
+    generate_batch_links,
+    open_batch_in_desktop
+)
 
-app = Flask(__name__)
+# Initialize Flask application with explicit package paths
+app = Flask(
+    __name__,
+    template_folder=str(PACKAGE_DIR / "templates"),
+    static_folder=str(PACKAGE_DIR / "static")
+)
 app.config["UPLOAD_FOLDER"] = str(UPLOAD_DIR)
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16MB max upload
 
@@ -45,11 +55,10 @@ def index():
 @app.route("/favicon.ico")
 def favicon():
     return send_from_directory(
-        Path(app.root_path) / "static",
+        PACKAGE_DIR / "static",
         "favicon.svg",
         mimetype="image/svg+xml"
     )
-
 
 
 @app.route("/api/upload", methods=["POST"])
@@ -72,7 +81,6 @@ def upload_file():
 
     save_path = Path(app.config["UPLOAD_FOLDER"]) / filename
     file.save(save_path)
-
 
     try:
         contacts, columns, detected = load_contacts_file(str(save_path), default_country_code=country_code)
@@ -101,7 +109,7 @@ def remap_columns():
     phone_col = data.get("phone_col")
     email_col = data.get("email_col")
     campus_id_col = data.get("campus_id_col")
-    fallback_domain = data.get("fallback_domain", "lums.edu.pk")
+    fallback_domain = data.get("fallback_domain", "institution.edu")
     country_code = data.get("country_code", state["country_code"])
     state["country_code"] = country_code
 
@@ -131,7 +139,6 @@ def remap_columns():
         })
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
-
 
 
 @app.route("/api/preview", methods=["POST"])
@@ -244,7 +251,6 @@ def verify_gemini_key():
     return jsonify(result)
 
 
-
 @app.route("/api/ai/generate", methods=["POST"])
 def generate_ai_messages():
     """Generates structured Email and WhatsApp copy using Gemini AI."""
@@ -267,7 +273,6 @@ def generate_ai_messages():
 
 
 # --- Dispatch Endpoints ---
-
 
 @app.route("/api/send/email-single", methods=["POST"])
 def send_single_email():
@@ -353,14 +358,14 @@ def open_whatsapp_desktop():
     tmpl = data.get("template", state["whatsapp_template"])
     delay = float(data.get("delay", 1.8))
     
-    from whatsapp_handler import open_batch_in_desktop
     opened_count = open_batch_in_desktop(state["contacts"], tmpl, delay=delay)
     return jsonify({"success": True, "opened_count": opened_count})
 
 
+def run_server(host: str = "0.0.0.0", port: int = 8080, debug: bool = True):
+    """Entry point function to run the Flask development server."""
+    app.run(host=host, port=port, debug=debug)
+
 
 if __name__ == "__main__":
-    # Port 8080 is used because macOS blocks port 5000/5001 for AirPlay Receiver
-    app.run(host="0.0.0.0", port=8080, debug=True)
-
-
+    run_server(host="0.0.0.0", port=8080, debug=True)

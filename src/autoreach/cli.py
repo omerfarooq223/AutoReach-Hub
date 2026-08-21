@@ -2,36 +2,36 @@ import argparse
 import sys
 import time
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 
-from config import DEFAULT_COUNTRY_CODE
-from excel_handler import load_contacts_file, render_message_template
-from graph_mail_handler import MicrosoftGraphMailHandler
-from smtp_handler import SMTPMailHandler
-from whatsapp_handler import generate_whatsapp_url, open_whatsapp_chat
+from .config import DEFAULT_COUNTRY_CODE
+from .core.excel_handler import load_contacts_file, render_message_template
+from .dispatchers.graph_mail import MicrosoftGraphMailHandler
+from .dispatchers.smtp_mail import SMTPMailHandler
+from .dispatchers.whatsapp import generate_whatsapp_url, open_whatsapp_chat
 
 
-def run_cli():
+def run_cli(args_list: Optional[List[str]] = None):
     parser = argparse.ArgumentParser(
-        description="Automated Excel to WhatsApp and Email (Microsoft 365 / SMTP) Dispatcher"
+        description="AutoReach Hub - Automated Multi-Channel Dispatcher CLI"
     )
     parser.add_argument("--file", "-f", help="Path to Excel (.xlsx/.xls) or CSV file")
     parser.add_argument("--country-code", "-cc", default=DEFAULT_COUNTRY_CODE, help="Default country code (e.g. 92 for PK)")
-    parser.add_argument("--email-backend", choices=["graph", "smtp"], default="graph", help="Email provider: 'graph' (LUMS/Microsoft 365) or 'smtp' (Gmail/Custom)")
+    parser.add_argument("--email-backend", choices=["graph", "smtp"], default="graph", help="Email provider: 'graph' (Microsoft 365) or 'smtp' (Gmail/Custom)")
     parser.add_argument("--subject", "-s", default="Important Notification for {Name}", help="Email Subject (supports placeholders)")
-    parser.add_argument("--email-body", "-eb", default="Hello {Name},\n\nThis is an official notification regarding your course {CourseName}.\n\nBest regards,\nLUMS Team", help="Email Message Body")
+    parser.add_argument("--email-body", "-eb", default="Hello {Name},\n\nThis is an official notification regarding your course {CourseName}.\n\nBest regards,\nAcademic Department", help="Email Message Body")
     parser.add_argument("--whatsapp-body", "-wb", default="Hello {Name}, your meeting for {CourseName} is scheduled for {MeetingTime}.", help="WhatsApp Message Template")
     parser.add_argument("--send-email", action="store_true", help="Send emails to all contacts with valid email addresses")
     parser.add_argument("--open-whatsapp", action="store_true", help="Open WhatsApp web chats for contacts sequentially")
     parser.add_argument("--wa-delay", type=float, default=2.5, help="Delay in seconds between opening WhatsApp tabs (default: 2.5s)")
-    parser.add_argument("--login-lums", action="store_true", help="Authenticate with LUMS / Microsoft 365 using Device Code Flow")
+    parser.add_argument("--login-m365", "--login-lums", action="store_true", help="Authenticate with Microsoft 365 using Device Code Flow")
     parser.add_argument("--dry-run", action="store_true", help="Print generated messages without sending")
 
-    args = parser.parse_args()
+    args = parser.parse_args(args_list)
 
-    # Handle LUMS login specifically
-    if args.login_lums:
-        print("\n=== LUMS / Microsoft 365 Login ===")
+    # Handle Microsoft 365 login
+    if args.login_m365 or getattr(args, "login_lums", False):
+        print("\n=== Microsoft 365 Device Code Login ===")
         handler = MicrosoftGraphMailHandler()
         status = handler.get_auth_status()
         if status.get("authenticated"):
@@ -55,7 +55,7 @@ def run_cli():
         return
 
     if not args.file:
-        print("No file specified. Use --file <path_to_excel_or_csv> or --login-lums")
+        print("No file specified. Use --file <path_to_excel_or_csv> or --login-m365")
         parser.print_help()
         return
 
@@ -95,10 +95,10 @@ def run_cli():
             email_handler = MicrosoftGraphMailHandler()
             status = email_handler.get_auth_status()
             if not status.get("authenticated"):
-                print("❌ Microsoft 365 / LUMS is not authenticated. Please run with `--login-lums` first.")
+                print("❌ Microsoft 365 is not authenticated. Please run with `--login-m365` first.")
                 return
             user = status.get("user", {})
-            print(f" Sending from LUMS Account: {user.get('displayName')} ({user.get('email')})")
+            print(f" Sending from Microsoft Account: {user.get('displayName')} ({user.get('email')})")
         else:
             email_handler = SMTPMailHandler()
             test_res = email_handler.test_connection()

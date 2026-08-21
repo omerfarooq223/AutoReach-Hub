@@ -2,15 +2,12 @@ import os
 import json
 import requests
 from typing import Dict, Any, List, Optional
-from config import BASE_DIR
-
-# Check environment or config
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+from ..config import BASE_DIR, GEMINI_API_KEY
 
 
 class GeminiAIHandler:
     def __init__(self, api_key: Optional[str] = None):
-        self.api_key = api_key or os.getenv("GEMINI_API_KEY", "")
+        self.api_key = api_key or os.getenv("GEMINI_API_KEY", "") or GEMINI_API_KEY
         # Primary & fallback model endpoints
         self.models = [
             "gemini-2.5-flash",
@@ -122,4 +119,3 @@ RULES:
             return {"success": False, "error": "Failed to parse AI JSON response. Please try again."}
         except Exception as e:
             return {"success": False, "error": f"AI generation failed: {str(e)}"}
-
