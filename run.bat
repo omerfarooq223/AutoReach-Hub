@@ -23,8 +23,9 @@ echo Checking dependencies...
 pip install -r requirements.txt --quiet
 
 echo.
-echo Starting application at http://127.0.0.1:5001
-start "" http://127.0.0.1:5001
+echo Starting application at http://127.0.0.1:8080
+start "" http://127.0.0.1:8080
+
 
 python app.py
 pause

@@ -31,11 +31,12 @@ echo "🔍 Checking dependencies..."
 pip install -r requirements.txt --quiet
 
 # Open browser after 1.5 seconds in background
-(sleep 1.5 && (open "http://127.0.0.1:5001" 2>/dev/null || xdg-open "http://127.0.0.1:5001" 2>/dev/null || true)) &
+(sleep 1.5 && (open "http://127.0.0.1:8080" 2>/dev/null || xdg-open "http://127.0.0.1:8080" 2>/dev/null || true)) &
 
 echo ""
-echo "✨ AutoReach Hub is running at: http://127.0.0.1:5001"
+echo "✨ AutoReach Hub is running at: http://127.0.0.1:8080"
 echo "Press Ctrl+C to stop the server anytime."
+
 echo "=================================================="
 echo ""
 

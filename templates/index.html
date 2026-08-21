@@ -3,15 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AutoReach Hub | Excel to WhatsApp & Email Automation</title>
-  <!-- Google Fonts: Inter & Outfit -->
+  <title>AutoReach Hub | Smart Multi-Channel Dispatcher</title>
+  <!-- Favicon / Tab Icon -->
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+  <link rel="alternate icon" href="/favicon.ico" />
+  <!-- Google Fonts: Inter, Outfit, JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Lucide Icons (local, zero CDN latency) -->
+  <script src="/static/lucide.min.js"></script>
   <link rel="stylesheet" href="/static/style.css" />
 </head>
+
 <body>
   <!-- Header / Navbar -->
   <header class="app-header">
@@ -21,24 +25,40 @@
       </div>
       <div>
         <h1 class="brand-title">AutoReach <span>Hub</span></h1>
-        <p class="brand-subtitle">Smart Excel Dispatcher for WhatsApp & Email (LUMS M365 / SMTP)</p>
+        <p class="brand-subtitle">Smart Excel Dispatcher for WhatsApp & Email (M365 / SMTP) with Gemini AI</p>
       </div>
     </div>
 
     <div class="header-actions">
+      <!-- Gemini AI Status Pill -->
+      <div id="ai-status-pill" class="auth-pill ai-pill disconnected" onclick="openAIModal()" title="Configure Google Gemini AI">
+        <span class="status-dot-ai"></span>
+        <i data-lucide="sparkles" class="mini-icon"></i>
+        <span id="ai-status-text">Gemini AI: Missing</span>
+        <i data-lucide="check-circle-2" id="ai-icon-check" class="mini-icon text-emerald hidden"></i>
+        <i data-lucide="x-circle" id="ai-icon-cross" class="mini-icon text-rose"></i>
+      </div>
+
       <!-- M365 Auth Status Pill -->
       <div id="m365-status-card" class="auth-pill not-authenticated" onclick="openM365Modal()">
         <span class="status-dot"></span>
-        <span id="m365-status-text">LUMS / M365: Connect</span>
+        <span id="m365-status-text">Microsoft 365: Connect</span>
         <i data-lucide="chevron-right" class="mini-icon"></i>
       </div>
 
-      <!-- Quick Help / Config button -->
+      <!-- Developer Profile icon button -->
+      <button class="icon-btn dev-header-btn" onclick="openDeveloperModal()" title="Developer Profile — Muhammad Umar Farooq">
+        <span class="dev-avatar-mini">UF</span>
+      </button>
+
+      <!-- Quick Settings button -->
       <button class="icon-btn" onclick="openSettingsModal()" title="Email & System Settings">
         <i data-lucide="settings"></i>
       </button>
     </div>
   </header>
+
+
 
   <!-- Main Container -->
   <main class="app-main">
@@ -52,7 +72,7 @@
       <div class="step-line"></div>
       <div class="step-item" id="step-nav-2">
         <span class="step-num">2</span>
-        <span class="step-label">Compose Messages</span>
+        <span class="step-label">Compose with AI</span>
       </div>
       <div class="step-line"></div>
       <div class="step-item" id="step-nav-3">
@@ -74,9 +94,7 @@
               <i data-lucide="file-spreadsheet" class="card-icon text-indigo"></i>
               <span>1. Contact Source</span>
             </div>
-            <button class="btn btn-sm btn-subtle" onclick="loadSampleData()" id="btn-load-sample">
-              <i data-lucide="sparkles"></i> Load Sample Data
-            </button>
+            <span class="badge badge-subtle">Excel / CSV</span>
           </div>
 
           <div class="card-body">
@@ -90,9 +108,10 @@
 
             <div id="file-loaded-info" class="file-badge hidden">
               <i data-lucide="check-circle-2" class="text-emerald"></i>
-              <span id="loaded-filename">sample_contacts.xlsx</span>
-              <span class="badge" id="loaded-count">5 contacts</span>
+              <span id="loaded-filename">contacts.xlsx</span>
+              <span class="badge" id="loaded-count">0 contacts</span>
             </div>
+
 
             <!-- Country code & column options -->
             <div class="form-row mt-3">
@@ -118,32 +137,45 @@
               </div>
               <div id="mapping-body" class="mapping-body hidden">
                 <div class="form-row">
-                  <div class="form-group">
+                  <div class="form-group flex-1">
                     <label>Name Column</label>
                     <select id="map-name" class="form-control" onchange="applyRemap()"></select>
                   </div>
-                  <div class="form-group">
+                  <div class="form-group flex-1">
                     <label>Phone / WhatsApp</label>
                     <select id="map-phone" class="form-control" onchange="applyRemap()"></select>
                   </div>
-                  <div class="form-group">
+                </div>
+                <div class="form-row mt-2">
+                  <div class="form-group flex-1">
                     <label>Email Column</label>
                     <select id="map-email" class="form-control" onchange="applyRemap()"></select>
                   </div>
+                  <div class="form-group flex-1">
+                    <label>Campus ID / Roll No</label>
+                    <select id="map-campus-id" class="form-control" onchange="applyRemap()"></select>
+                  </div>
                 </div>
+                <div class="form-row mt-2">
+                  <div class="form-group flex-1">
+                    <label class="text-xs">Fallback Email Domain (for missing emails)</label>
+                    <input type="text" id="map-fallback-domain" class="form-control form-control-sm" value="lums.edu.pk" placeholder="lums.edu.pk" onchange="applyRemap()" />
+                  </div>
+                </div>
+
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Card 2: Message Composer -->
+        <!-- Card 2: Message Composer with Gemini AI Assistant -->
         <div class="glass-card mt-4">
           <div class="card-header">
             <div class="card-title">
               <i data-lucide="message-square" class="card-icon text-violet"></i>
               <span>2. Message Composer</span>
             </div>
-            <!-- Tabs for Email vs WhatsApp -->
+            
             <div class="tab-group">
               <button class="tab-btn active" id="tab-btn-email" onclick="switchComposerTab('email')">
                 <i data-lucide="mail"></i> Email
@@ -155,9 +187,50 @@
           </div>
 
           <div class="card-body">
+
+            <!-- Gemini AI Smart Assistant Bar -->
+            <div class="ai-assistant-card">
+              <div class="ai-header" onclick="toggleAIDrawer()">
+                <div class="ai-title">
+                  <i data-lucide="sparkles" class="text-violet"></i>
+                  <span>Gemini AI Copywriter</span>
+                  <span class="badge badge-emerald" id="ai-card-badge"><i data-lucide="check" class="mini-icon"></i> AI Active</span>
+                </div>
+
+                <i data-lucide="chevron-down" id="ai-drawer-chevron"></i>
+              </div>
+
+              <div id="ai-drawer-body" class="ai-body">
+                <div class="form-group mb-2">
+                  <label class="text-xs">What message would you like to send?</label>
+                  <textarea id="ai-prompt-input" class="form-control ai-prompt-textarea" rows="2" placeholder="e.g. Draft an urgent payment reminder with due date and fee amount..."></textarea>
+                </div>
+                
+                <div class="ai-controls-row">
+                  <div class="form-group mb-0">
+                    <label class="text-xs">Tone & Persona</label>
+                    <select id="ai-tone-select" class="form-control form-control-sm">
+                      <option value="Professional" selected>Professional & Formal</option>
+                      <option value="Friendly">Friendly & Welcoming</option>
+                      <option value="Urgent">Urgent & Direct</option>
+                      <option value="Academic">Academic / Scholarly</option>
+                      <option value="Persuasive">Persuasive / Engaging</option>
+                    </select>
+                  </div>
+                  
+                  <div class="ai-btn-wrapper">
+                    <button class="btn btn-primary ai-generate-btn" onclick="generateWithAI()" id="btn-generate-ai">
+                      <i data-lucide="sparkles"></i> Generate Drafts with Gemini
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+
             <!-- Available Placeholders Pills -->
-            <div class="placeholder-container">
-              <span class="placeholder-label"><i data-lucide="tag" class="mini-icon"></i> Click tag to insert:</span>
+            <div class="placeholder-container mt-3">
+              <span class="placeholder-label"><i data-lucide="tag" class="mini-icon"></i> Click tag to insert placeholder:</span>
               <div class="tags-wrapper" id="available-tags">
                 <span class="tag-pill" onclick="insertTag('{Name}')">{Name}</span>
                 <span class="tag-pill" onclick="insertTag('{Email}')">{Email}</span>
@@ -179,7 +252,7 @@ This is an official update regarding your course {CourseName}.
 Your session is scheduled for {MeetingTime}.
 
 Best regards,
-LUMS Department</textarea>
+Academic / Admin Department</textarea>
               </div>
             </div>
 
@@ -188,8 +261,8 @@ LUMS Department</textarea>
               <div class="form-group">
                 <label for="whatsapp-body-input">WhatsApp Message Text</label>
                 <textarea id="whatsapp-body-input" class="form-control" rows="6" oninput="updateLivePreview()">Hello {Name}! 👋
-Your session for {CourseName} is scheduled for {MeetingTime}.
-Please reach out if you have any questions.</textarea>
+This is an important update for you. Please review it at your earliest convenience.
+Feel free to reach out if you have any questions.</textarea>
               </div>
             </div>
 
@@ -225,7 +298,7 @@ Please reach out if you have any questions.</textarea>
               <label class="channel-label">Email Dispatch Method:</label>
               <div class="toggle-switch-container">
                 <button class="toggle-option active" id="channel-opt-graph" onclick="setEmailChannel('graph')">
-                  <i data-lucide="shield-check"></i> LUMS M365 (Graph API)
+                  <i data-lucide="shield-check"></i> Microsoft 365 (SSO OAuth2)
                 </button>
                 <button class="toggle-option" id="channel-opt-smtp" onclick="setEmailChannel('smtp')">
                   <i data-lucide="server"></i> Standard SMTP (Gmail/Custom)
@@ -244,23 +317,60 @@ Please reach out if you have any questions.</textarea>
             </div>
           </div>
 
-          <!-- Quick Metrics Bar -->
-          <div class="metrics-row">
+          <!-- Enhanced Data Quality & Health Audit Bar -->
+          <div class="metrics-row audit-metrics-row">
             <div class="metric-item">
-              <span class="metric-val" id="metric-total">0</span>
-              <span class="metric-lbl">Total Contacts</span>
+              <div class="metric-header-row">
+                <span class="metric-lbl">Total Contacts</span>
+                <span class="metric-subtag" id="metric-loaded-badge">Ready</span>
+              </div>
+              <div class="metric-single-val">
+                <span class="metric-val" id="metric-total">0</span>
+              </div>
+              <span class="metric-meta-hint" id="metric-file-hint">Upload Excel or CSV</span>
             </div>
+
             <div class="metric-item">
-              <span class="metric-val text-emerald" id="metric-valid-email">0</span>
-              <span class="metric-lbl">Valid Emails</span>
+              <div class="metric-header-row">
+                <span class="metric-lbl">Email Deliverability</span>
+                <span class="metric-subtag tag-emerald" id="metric-email-pct">100%</span>
+              </div>
+              <div class="metric-pills-row">
+                <span class="status-pill-badge pill-valid">
+                  <strong id="metric-valid-email">0</strong> Valid
+                </span>
+                <span class="status-pill-badge pill-invalid">
+                  <strong id="metric-invalid-email">0</strong> Issue
+                </span>
+              </div>
+              <span class="metric-meta-hint" id="metric-derived-email-hint">0 derived from Campus ID</span>
             </div>
+
             <div class="metric-item">
-              <span class="metric-val text-emerald" id="metric-valid-phone">0</span>
-              <span class="metric-lbl">Valid Numbers</span>
+              <div class="metric-header-row">
+                <span class="metric-lbl">Phone Health</span>
+                <span class="metric-subtag tag-cyan" id="metric-phone-pct">0%</span>
+              </div>
+              <div class="metric-pills-row">
+                <span class="status-pill-badge pill-valid">
+                  <strong id="metric-valid-phone">0</strong> Valid
+                </span>
+                <span class="status-pill-badge pill-invalid">
+                  <strong id="metric-invalid-phone">0</strong> Issue
+                </span>
+              </div>
+              <span class="metric-meta-hint" id="metric-phone-hint">libphonenumber verified</span>
             </div>
+
             <div class="metric-item">
-              <span class="metric-val text-indigo" id="metric-sent">0</span>
-              <span class="metric-lbl">Emails Sent</span>
+              <div class="metric-header-row">
+                <span class="metric-lbl">Dispatch Progress</span>
+                <span class="metric-subtag tag-indigo" id="metric-sent-pct">0%</span>
+              </div>
+              <div class="metric-single-val">
+                <span class="metric-val text-indigo" id="metric-sent">0</span>
+              </div>
+              <span class="metric-meta-hint" id="metric-sent-hint">0 pending delivery</span>
             </div>
           </div>
 
@@ -278,16 +388,53 @@ Please reach out if you have any questions.</textarea>
 
         <!-- Contacts Interactive Table -->
         <div class="glass-card mt-4 flex-1">
-          <div class="card-header">
+          <div class="card-header flex-col-sm">
             <div class="card-title">
               <i data-lucide="users" class="card-icon text-teal"></i>
               <span>3. Contact Roster & Live Dispatch</span>
+              <span class="badge badge-subtle ml-2" id="filtered-count-badge">Showing 0 contacts</span>
             </div>
             <div class="table-search">
               <i data-lucide="search" class="search-icon"></i>
-              <input type="text" id="search-contacts" placeholder="Search contacts..." oninput="filterContactsTable()" />
+              <input type="text" id="search-contacts" placeholder="Search name, phone, email..." oninput="filterContactsTable()" />
             </div>
           </div>
+
+          <!-- Interactive Filter Chips Row -->
+          <div class="filter-chips-bar">
+            <span class="filter-label"><i data-lucide="filter" class="mini-icon"></i> Filter Roster:</span>
+            <div class="filter-chips-wrapper">
+              <button class="filter-chip active" id="chip-filter-all" onclick="setTableFilter('all')">
+                All (<span id="chip-count-all">0</span>)
+              </button>
+              <button class="filter-chip chip-emerald" id="chip-filter-valid-phone" onclick="setTableFilter('valid_phone')">
+                <i data-lucide="check" class="mini-icon"></i> Valid Phones (<span id="chip-count-valid-phone">0</span>)
+              </button>
+              <button class="filter-chip chip-rose" id="chip-filter-malformed-phone" onclick="setTableFilter('malformed_phone')">
+                <i data-lucide="alert-circle" class="mini-icon"></i> Phone Typos (<span id="chip-count-malformed-phone">0</span>)
+              </button>
+              <button class="filter-chip chip-subtle" id="chip-filter-missing-phone" onclick="setTableFilter('missing_phone')">
+                <i data-lucide="minus" class="mini-icon"></i> Missing Phone (<span id="chip-count-missing-phone">0</span>)
+              </button>
+              <button class="filter-chip chip-emerald" id="chip-filter-valid-email" onclick="setTableFilter('valid_email')">
+                <i data-lucide="check" class="mini-icon"></i> Valid Emails (<span id="chip-count-valid-email">0</span>)
+              </button>
+              <button class="filter-chip chip-amber" id="chip-filter-derived-email" onclick="setTableFilter('derived_email')">
+                <i data-lucide="sparkles" class="mini-icon"></i> Derived (<span id="chip-count-derived-email">0</span>)
+              </button>
+              <button class="filter-chip chip-subtle" id="chip-filter-missing-email" onclick="setTableFilter('missing_email')">
+                <i data-lucide="minus" class="mini-icon"></i> Missing Email (<span id="chip-count-missing-email">0</span>)
+              </button>
+              <button class="filter-chip chip-rose" id="chip-filter-malformed-email" onclick="setTableFilter('malformed_email')">
+                <i data-lucide="alert-triangle" class="mini-icon"></i> Email Typos (<span id="chip-count-malformed-email">0</span>)
+              </button>
+              <button class="filter-chip chip-indigo" id="chip-filter-sent" onclick="setTableFilter('sent')">
+                <i data-lucide="send" class="mini-icon"></i> Sent (<span id="chip-count-sent">0</span>)
+              </button>
+            </div>
+          </div>
+
+
 
           <div class="table-container">
             <table class="data-table" id="contacts-table">
@@ -305,13 +452,15 @@ Please reach out if you have any questions.</textarea>
                 <tr>
                   <td colspan="6" class="empty-state">
                     <i data-lucide="inbox" class="empty-icon"></i>
-                    <p>No contacts loaded yet. Upload an Excel file or click "Load Sample Data".</p>
+                    <p>No contacts loaded yet. Upload your Excel or CSV file to get started.</p>
                   </td>
+
                 </tr>
               </tbody>
             </table>
           </div>
         </div>
+
 
         <!-- Activity Log Console -->
         <div class="glass-card mt-4 log-card">
@@ -326,32 +475,134 @@ Please reach out if you have any questions.</textarea>
             </div>
           </div>
           <div class="log-body" id="log-console">
-            <div class="log-entry log-info">[System] AutoReach Hub ready. Connect your LUMS account or load an Excel sheet.</div>
+            <div class="log-entry log-info">[System] AutoReach Hub ready. Connect your Microsoft 365 account or load an Excel sheet.</div>
           </div>
         </div>
 
       </div>
 
     </div>
+
+
+    <!-- Premium Executive App Footer -->
+    <footer class="app-footer">
+      <div class="footer-inner">
+        <!-- Left: Brand & Engine Status -->
+        <div class="footer-section footer-brand">
+          <span class="status-pulse-dot" title="System Online"></span>
+          <span class="footer-title">AutoReach <span class="text-indigo-gradient">Hub</span></span>
+          <span class="footer-badge-version">v2.4</span>
+        </div>
+
+        <!-- Center: Engineering Credit -->
+        <div class="footer-section footer-credit">
+          <span class="credit-label">Engineered by</span>
+          <button class="developer-credit-btn" onclick="openDeveloperModal()" title="View Developer Profile">
+            <span class="credit-avatar">UF</span>
+            <span class="credit-name">Muhammad Umar Farooq</span>
+          </button>
+        </div>
+
+        <!-- Right: Official Links -->
+        <div class="footer-section footer-links">
+          <a href="https://omerfarooq223.github.io" target="_blank" rel="noopener noreferrer" class="footer-pill-link">
+            <i data-lucide="globe" class="link-icon"></i>
+            <span>Portfolio</span>
+            <i data-lucide="external-link" class="link-arrow"></i>
+          </a>
+          <a href="https://github.com/omerfarooq223/AutoReach-Hub" target="_blank" rel="noopener noreferrer" class="footer-pill-link">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" class="link-icon" style="vertical-align:middle">
+              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+            </svg>
+            <span>GitHub</span>
+            <i data-lucide="external-link" class="link-arrow"></i>
+          </a>
+        </div>
+      </div>
+    </footer>
   </main>
 
-  <!-- Modal 1: Microsoft 365 / LUMS Authentication Modal -->
+
+  <!-- Modal: Developer Profile Card (Exact Design from Image) -->
+  <div class="modal-overlay hidden" id="developer-modal" onclick="handleDevModalOverlayClick(event)">
+    <div class="dev-modal-card" id="dev-card-content">
+      <!-- Top Glowing Cyan Accent Bar -->
+      <!-- Top Accent Bar -->
+      <div class="dev-accent-bar"></div>
+      
+      <!-- Top Action Controls: GitHub Pill & Close Button -->
+      <div class="dev-modal-top-bar">
+        <a href="https://github.com/omerfarooq223/AutoReach-Hub" target="_blank" rel="noopener noreferrer" class="dev-top-github-pill" title="View Source on GitHub">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+          </svg>
+          <span>AutoReach-Hub</span>
+        </a>
+
+        <button class="dev-close-btn" onclick="closeDeveloperModal()" title="Close">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <!-- Avatar with UF Initials & Radiant Cyan Gradient -->
+      <div class="dev-avatar-wrapper">
+        <div class="dev-avatar-circle">
+          <span>UF</span>
+        </div>
+      </div>
+
+      <!-- Developer Name & Title -->
+      <h2 class="dev-name">Muhammad Umar Farooq</h2>
+      <div class="dev-role-tag">AI ENGINEER</div>
+
+      <!-- Inset Information Box -->
+      <div class="dev-info-box">
+        <div class="dev-dept">Department of Artificial Intelligence</div>
+        <div class="dev-inst">University of Management and Technology</div>
+        <div class="dev-loc">Lahore, Pakistan</div>
+      </div>
+
+      <!-- Logic Customization / GitHub Info Prompt -->
+      <p class="dev-hint-text">
+        Need to modify communication rules, expand data pipelines, or customize automation logic?
+      </p>
+
+      <!-- Action Buttons -->
+      <div class="dev-action-buttons">
+        <a href="https://github.com/omerfarooq223/AutoReach-Hub" target="_blank" rel="noopener noreferrer" class="dev-btn dev-btn-github">
+          <svg class="dev-octocat-svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+          </svg>
+          <span>GitHub Repository</span>
+        </a>
+
+        <a href="https://omerfarooq223.github.io" target="_blank" rel="noopener noreferrer" class="dev-btn dev-btn-portfolio">
+          <i data-lucide="external-link"></i>
+          <span>Visit Developer Portfolio</span>
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- Modal 1: Microsoft 365 / Institutional Sign-In -->
   <div class="modal-overlay hidden" id="m365-modal">
     <div class="modal-card">
       <div class="modal-header">
         <div class="modal-title">
           <i data-lucide="shield" class="text-indigo"></i>
-          <span>LUMS Microsoft 365 Sign-In</span>
+          <span>Microsoft 365 Sign-In</span>
         </div>
         <button class="close-btn" onclick="closeM365Modal()"><i data-lucide="x"></i></button>
       </div>
 
       <div class="modal-body" id="m365-modal-body">
         <div class="auth-flow-info">
-          <p>Sign in securely with your official <strong>@lums.edu.pk</strong> account via Microsoft Device Code Flow (OAuth 2.0 with MFA/SSO).</p>
+          <p>Sign in securely with your school, university, or organization account via Microsoft Device Code Flow (OAuth 2.0 with MFA/SSO).</p>
           <div class="notice-box">
             <i data-lucide="info" class="text-indigo"></i>
-            <span>Emails sent will automatically save to your official LUMS <strong>Sent Items</strong> folder!</span>
+            <span>All emails sent will automatically save to your official <strong>Sent Items</strong> folder!</span>
           </div>
         </div>
 
@@ -387,8 +638,8 @@ Please reach out if you have any questions.</textarea>
               <i data-lucide="user-check"></i>
             </div>
             <div class="user-info-text">
-              <h3 id="auth-display-name">Muhammad Omer Farooq</h3>
-              <p id="auth-email">omer_farooq@lums.edu.pk</p>
+              <h3 id="auth-display-name">Authenticated User</h3>
+              <p id="auth-email">user@institution.edu</p>
               <span class="badge badge-emerald">Connected & Verified</span>
             </div>
           </div>
@@ -401,7 +652,39 @@ Please reach out if you have any questions.</textarea>
     </div>
   </div>
 
-  <!-- Modal 2: SMTP Settings Modal -->
+  <!-- Modal 2: Gemini AI Key Setup Modal -->
+  <div class="modal-overlay hidden" id="ai-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i data-lucide="sparkles" class="text-violet"></i>
+          <span>Google Gemini AI Settings</span>
+        </div>
+        <button class="close-btn" onclick="closeAIModal()"><i data-lucide="x"></i></button>
+      </div>
+
+      <div class="modal-body">
+        <p class="text-muted text-sm mb-3">Power your message composer with Google Gemini 2.5 Flash to automatically draft personalized Email and WhatsApp copy in seconds.</p>
+
+        <div class="form-group">
+          <label>Google Gemini API Key</label>
+          <input type="password" id="gemini-api-key-input" class="form-control code-font" placeholder="AIzaSy..." />
+          <span class="text-xs text-muted mt-1 block">Don't have a key? Get one free at <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-indigo">Google AI Studio</a>.</span>
+        </div>
+
+        <div class="modal-footer-actions mt-4">
+          <button class="btn btn-subtle" onclick="testGeminiKey()" id="btn-test-ai">
+            <i data-lucide="activity"></i> Verify Key
+          </button>
+          <button class="btn btn-primary" onclick="saveGeminiKey()">
+            <i data-lucide="check"></i> Save Key
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 3: SMTP Settings Modal -->
   <div class="modal-overlay hidden" id="settings-modal">
     <div class="modal-card">
       <div class="modal-header">
@@ -440,11 +723,11 @@ Please reach out if you have any questions.</textarea>
         <div class="form-row mt-2">
           <div class="form-group flex-1">
             <label>Sender Display Name</label>
-            <input type="text" id="smtp-from-name" class="form-control" value="LUMS Dispatcher" />
+            <input type="text" id="smtp-from-name" class="form-control" value="Academic Dispatcher" />
           </div>
           <div class="form-group flex-1">
             <label>Reply-To Address</label>
-            <input type="email" id="smtp-reply-to" class="form-control" placeholder="your_email@lums.edu.pk" />
+            <input type="email" id="smtp-reply-to" class="form-control" placeholder="info@institution.edu" />
           </div>
         </div>
 
@@ -468,6 +751,219 @@ Please reach out if you have any questions.</textarea>
       </div>
     </div>
   </div>
+
+  <!-- Modal 4: Single Email Dispatch Review & Approval Modal -->
+  <div class="modal-overlay hidden" id="single-email-modal">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i data-lucide="shield-check" class="text-emerald"></i>
+          <span>Confirm Email Dispatch</span>
+        </div>
+        <button class="close-btn" onclick="closeSingleEmailModal()"><i data-lucide="x"></i></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="approval-banner">
+          <i data-lucide="info" class="text-indigo"></i>
+          <span>Please review the personalized email draft below before granting approval to send.</span>
+        </div>
+
+        <div class="recipient-summary-box mt-3">
+          <div class="summary-field">
+            <span class="field-label">Recipient:</span>
+            <strong id="single-send-recipient-name" class="text-light">Ali Khan</strong>
+            <span id="single-send-recipient-email" class="badge badge-emerald ml-2">ali@institution.edu</span>
+            <span id="single-send-derived-badge" class="badge badge-amber ml-1 hidden">Derived from ID</span>
+          </div>
+          <div class="summary-field mt-1">
+            <span class="field-label">Channel:</span>
+            <span id="single-send-channel-badge" class="badge badge-subtle">Microsoft 365</span>
+          </div>
+        </div>
+
+        <div class="form-group mt-3">
+          <label>Email Subject</label>
+          <div class="preview-subject-box" id="single-send-subject">Loading subject...</div>
+        </div>
+
+        <div class="form-group mt-2">
+          <label>Personalized Message Body</label>
+          <div class="preview-message-box" id="single-send-body">Loading body...</div>
+        </div>
+
+        <div class="modal-footer-actions mt-4">
+          <button class="btn btn-subtle" onclick="closeSingleEmailModal()">
+            <i data-lucide="x"></i> Cancel / Don't Send
+          </button>
+          <button class="btn btn-primary" id="btn-confirm-single-send" onclick="executeSingleEmailSend()">
+            <i data-lucide="send"></i> Approve & Send Email Now
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 5: Bulk Email Dispatch Review & Approval Modal -->
+  <div class="modal-overlay hidden" id="bulk-email-modal">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i data-lucide="send" class="text-indigo"></i>
+          <span>Approve Bulk Email Dispatch</span>
+        </div>
+        <button class="close-btn" onclick="closeBulkEmailModal()"><i data-lucide="x"></i></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="bulk-stats-grid">
+          <div class="bulk-stat-card border-emerald">
+            <span class="bulk-stat-val text-emerald" id="bulk-approved-count">0</span>
+            <span class="bulk-stat-lbl">Recipients Ready</span>
+          </div>
+          <div class="bulk-stat-card border-rose">
+            <span class="bulk-stat-val text-rose" id="bulk-skipped-count">0</span>
+            <span class="bulk-stat-lbl">Skipped (No Email)</span>
+          </div>
+          <div class="bulk-stat-card">
+            <span class="bulk-stat-val text-indigo" id="bulk-channel-lbl">Microsoft 365</span>
+            <span class="bulk-stat-lbl">Sending Route</span>
+          </div>
+        </div>
+
+        <div class="approval-banner mt-3">
+          <i data-lucide="alert-triangle" class="text-amber"></i>
+          <span>You are about to launch a batch broadcast. Below is a sample preview of the first email that will be dispatched:</span>
+        </div>
+
+        <div class="sample-preview-card mt-3">
+          <div class="sample-meta">
+            <span>Sample Contact #1: <strong id="bulk-sample-name">Student</strong> (<span id="bulk-sample-email">email</span>)</span>
+          </div>
+          <div class="sample-subject" id="bulk-sample-subject">Subject: ...</div>
+          <div class="sample-body" id="bulk-sample-body">Body: ...</div>
+        </div>
+
+        <div class="form-row mt-3 items-center">
+          <label class="checkbox-label">
+            <input type="checkbox" id="bulk-safety-delay" checked /> Include safe anti-spam throttle (1.2s delay between messages)
+          </label>
+        </div>
+
+        <div class="modal-footer-actions mt-4">
+          <button class="btn btn-subtle" onclick="closeBulkEmailModal()">
+            <i data-lucide="x"></i> Cancel Batch
+          </button>
+          <button class="btn btn-primary" id="btn-confirm-bulk-send" onclick="executeBulkEmailSend()">
+            <i data-lucide="send"></i> Approve & Start Batch Dispatch
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 6: Single WhatsApp Launch Approval Modal -->
+  <div class="modal-overlay hidden" id="single-wa-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i data-lucide="message-circle" class="text-whatsapp"></i>
+          <span>Confirm WhatsApp Launch</span>
+        </div>
+        <button class="close-btn" onclick="closeSingleWAModal()"><i data-lucide="x"></i></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="recipient-summary-box">
+          <div class="summary-field">
+            <span class="field-label">Recipient:</span>
+            <strong id="wa-modal-name" class="text-light">Ali Khan</strong>
+          </div>
+          <div class="summary-field mt-1">
+            <span class="field-label">Phone:</span>
+            <span id="wa-modal-phone" class="badge badge-emerald">+923001234567</span>
+            <span id="wa-modal-country" class="badge badge-subtle ml-1">Pakistan</span>
+          </div>
+        </div>
+
+        <div class="form-group mt-3">
+          <label>Pre-filled WhatsApp Message</label>
+          <div class="preview-message-box wa-preview-style" id="wa-modal-message">Loading message...</div>
+        </div>
+
+        <div class="modal-footer-actions mt-4">
+          <button class="btn btn-subtle" onclick="closeSingleWAModal()">
+            <i data-lucide="x"></i> Cancel
+          </button>
+          <button class="btn btn-subtle" onclick="copyWAModalText()" id="btn-copy-wa-modal" title="Copy text with all emojis intact">
+            <i data-lucide="copy"></i> Copy Text
+          </button>
+          <a class="btn btn-whatsapp" id="btn-confirm-wa-send" target="_blank" rel="noopener noreferrer" href="#" onclick="executeSingleWALaunch(event)">
+            <i data-lucide="message-circle"></i> Open WhatsApp Chat
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 7: Bulk WhatsApp Launch Approval Modal -->
+  <div class="modal-overlay hidden" id="bulk-wa-modal">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i data-lucide="message-circle" class="text-whatsapp"></i>
+          <span>Bulk WhatsApp Launch Approval</span>
+        </div>
+        <button class="close-btn" onclick="closeBulkWAModal()"><i data-lucide="x"></i></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="approval-banner">
+          <i data-lucide="shield-alert" class="mini-icon text-amber"></i>
+          <span>Review your bulk WhatsApp campaign before launching. Each contact will receive a customized message generated from your template.</span>
+        </div>
+
+        <div class="bulk-stats-grid mt-3">
+          <div class="bulk-stat-card border-emerald">
+            <span class="bulk-stat-val text-emerald" id="bulk-wa-valid-count">0</span>
+            <span class="bulk-stat-lbl">Verified Phone Numbers</span>
+          </div>
+          <div class="bulk-stat-card border-rose">
+            <span class="bulk-stat-val text-rose" id="bulk-wa-invalid-count">0</span>
+            <span class="bulk-stat-lbl">Missing / Skipped</span>
+          </div>
+          <div class="bulk-stat-card">
+            <span class="bulk-stat-val text-indigo" id="bulk-wa-total-count">0</span>
+            <span class="bulk-stat-lbl">Total Contacts</span>
+          </div>
+        </div>
+
+        <div class="form-group mt-3">
+          <label>Sample Message Preview (Recipient: <span id="bulk-wa-sample-name" class="text-emerald font-semibold">Ali Khan</span>)</label>
+          <div class="sample-preview-card">
+            <div class="sample-body wa-preview-style" id="bulk-wa-sample-body">Loading sample...</div>
+          </div>
+        </div>
+
+        <div class="form-group mt-3">
+          <label class="checkbox-label cursor-pointer">
+            <input type="checkbox" id="bulk-wa-throttle" checked /> Include safe anti-spam throttle (1.5s delay between tab launches)
+          </label>
+        </div>
+
+        <div class="modal-footer-actions mt-4">
+          <button class="btn btn-subtle" onclick="closeBulkWAModal()">
+            <i data-lucide="x"></i> Cancel
+          </button>
+          <button class="btn btn-whatsapp" id="btn-confirm-bulk-wa" onclick="executeBulkWALaunch()">
+            <i data-lucide="message-circle"></i> Launch WhatsApp Batch
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
 
   <!-- Toast Notification Container -->
   <div id="toast-container" class="toast-container"></div>

@@ -14,7 +14,7 @@ from excel_handler import load_contacts_file, render_message_template
 from graph_mail_handler import MicrosoftGraphMailHandler
 from smtp_handler import SMTPMailHandler
 from whatsapp_handler import generate_whatsapp_url, generate_whatsapp_app_url, generate_batch_links
-from create_sample_excel import generate_sample_files
+from ai_handler import GeminiAIHandler
 
 app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = str(UPLOAD_DIR)
@@ -22,6 +22,7 @@ app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16MB max upload
 
 # Global handler instances
 graph_handler = MicrosoftGraphMailHandler()
+ai_handler = GeminiAIHandler()
 
 # In-memory session state for loaded contacts
 state = {
@@ -30,7 +31,7 @@ state = {
     "detected_mapping": {},
     "file_name": "",
     "country_code": DEFAULT_COUNTRY_CODE,
-    "email_template": "Hello {Name},\n\nThis is an official update regarding your course {CourseName}.\n\nBest regards,\nLUMS Team",
+    "email_template": "Hello {Name},\n\nThis is an official update regarding your course {CourseName}.\n\nBest regards,\nAcademic Department",
     "email_subject": "Update for {Name} - {CourseName}",
     "whatsapp_template": "Hello {Name}! Your session for {CourseName} is scheduled for {MeetingTime}."
 }
@@ -41,28 +42,14 @@ def index():
     return render_template("index.html")
 
 
-@app.route("/api/sample", methods=["POST"])
-def load_sample():
-    """Generates and loads the sample contact list."""
-    sample_file, _ = generate_sample_files(str(UPLOAD_DIR))
-    contacts, columns, detected = load_contacts_file(sample_file, default_country_code=state["country_code"])
-    state["contacts"] = contacts
-    state["columns"] = columns
-    state["detected_mapping"] = detected
-    state["file_name"] = "sample_contacts.xlsx"
-    return jsonify({
-        "success": True,
-        "file_name": state["file_name"],
-        "total_contacts": len(contacts),
-        "columns": columns,
-        "detected": detected,
-        "contacts": contacts,
-        "templates": {
-            "email_subject": state["email_subject"],
-            "email_body": state["email_template"],
-            "whatsapp_body": state["whatsapp_template"]
-        }
-    })
+@app.route("/favicon.ico")
+def favicon():
+    return send_from_directory(
+        Path(app.root_path) / "static",
+        "favicon.svg",
+        mimetype="image/svg+xml"
+    )
+
 
 
 @app.route("/api/upload", methods=["POST"])
@@ -113,6 +100,8 @@ def remap_columns():
     name_col = data.get("name_col")
     phone_col = data.get("phone_col")
     email_col = data.get("email_col")
+    campus_id_col = data.get("campus_id_col")
+    fallback_domain = data.get("fallback_domain", "lums.edu.pk")
     country_code = data.get("country_code", state["country_code"])
     state["country_code"] = country_code
 
@@ -121,15 +110,17 @@ def remap_columns():
 
     file_path = Path(app.config["UPLOAD_FOLDER"]) / state["file_name"]
     try:
-        custom_mappings = {
+        custom_mapping = {
             "name_col": name_col,
             "phone_col": phone_col,
-            "email_col": email_col
+            "email_col": email_col,
+            "campus_id_col": campus_id_col
         }
         contacts, columns, detected = load_contacts_file(
             str(file_path),
             default_country_code=country_code,
-            custom_mappings=custom_mappings
+            custom_mapping=custom_mapping,
+            fallback_email_domain=fallback_domain
         )
         state["contacts"] = contacts
         state["detected_mapping"] = detected
@@ -140,6 +131,7 @@ def remap_columns():
         })
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
 
 
 @app.route("/api/preview", methods=["POST"])
@@ -231,7 +223,51 @@ def smtp_test():
     return jsonify(result)
 
 
+# --- Gemini AI Endpoints ---
+
+@app.route("/api/ai/status", methods=["GET"])
+def get_ai_status():
+    """Checks if a Gemini API Key is configured in environment or handler."""
+    has_key = bool(ai_handler.api_key or os.getenv("GEMINI_API_KEY", "").strip())
+    return jsonify({
+        "success": True,
+        "configured": has_key
+    })
+
+
+@app.route("/api/ai/verify-key", methods=["POST"])
+def verify_gemini_key():
+    """Validates a Gemini API Key."""
+    data = request.get_json() or {}
+    key = data.get("api_key", "").strip()
+    result = ai_handler.test_key(key)
+    return jsonify(result)
+
+
+
+@app.route("/api/ai/generate", methods=["POST"])
+def generate_ai_messages():
+    """Generates structured Email and WhatsApp copy using Gemini AI."""
+    data = request.get_json() or {}
+    prompt = data.get("prompt", "").strip()
+    tone = data.get("tone", "Professional")
+    custom_key = data.get("api_key", "").strip() or None
+
+    if not prompt:
+        return jsonify({"success": False, "error": "Prompt cannot be empty"}), 400
+
+    columns = state.get("columns", [])
+    result = ai_handler.generate_campaign_messages(
+        prompt=prompt,
+        columns=columns,
+        tone=tone,
+        custom_key=custom_key
+    )
+    return jsonify(result)
+
+
 # --- Dispatch Endpoints ---
+
 
 @app.route("/api/send/email-single", methods=["POST"])
 def send_single_email():
@@ -324,6 +360,7 @@ def open_whatsapp_desktop():
 
 
 if __name__ == "__main__":
-    # Bound to 0.0.0.0 for local network & iPhone/iPad access
-    app.run(host="0.0.0.0", port=5001, debug=True)
+    # Port 8080 is used because macOS blocks port 5000/5001 for AirPlay Receiver
+    app.run(host="0.0.0.0", port=8080, debug=True)
+
 
