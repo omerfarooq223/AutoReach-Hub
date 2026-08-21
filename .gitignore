@@ -1,0 +1,31 @@
+# Virtual Environment
+.venv/
+env/
+venv/
+ENV/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Microsoft Graph Token Cache (DO NOT COMMIT SENSITIVE TOKENS)
+.token_cache.bin
+*.token
+
+# Local Environment Variables
+.env
+
+# Uploaded Contacts Files
+uploads/*
+!uploads/.gitkeep
+
+# macOS metadata
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDEs
+.vscode/
+.idea/
+*.swp
