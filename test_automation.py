@@ -1,8 +1,9 @@
 import unittest
+import tempfile
+import os
+import pandas as pd
 from excel_handler import clean_phone_number, clean_email, auto_detect_columns, render_message_template, load_contacts_file
 from whatsapp_handler import generate_whatsapp_url, generate_whatsapp_app_url
-from create_sample_excel import generate_sample_files
-import os
 
 class TestAutomationCore(unittest.TestCase):
     def test_phone_cleaning_pakistan(self):
@@ -25,8 +26,8 @@ class TestAutomationCore(unittest.TestCase):
         self.assertEqual(clean_phone_number("+44 7911 123456", "44"), "447911123456")
 
     def test_email_cleaning(self):
-        self.assertEqual(clean_email("25100001@lums.edu.pk"), "25100001@lums.edu.pk")
-        self.assertEqual(clean_email("  test.user@lums.edu.pk  "), "test.user@lums.edu.pk")
+        self.assertEqual(clean_email("student.name@university.edu"), "student.name@university.edu")
+        self.assertEqual(clean_email("  test.user@institution.org  "), "test.user@institution.org")
 
     def test_auto_detect_columns(self):
         cols = ["Student Name", "Mobile Number", "Official Email", "Roll No", "Course"]
@@ -39,16 +40,16 @@ class TestAutomationCore(unittest.TestCase):
         contact = {
             "name": "Ali Khan",
             "phone_clean": "923001234567",
-            "email_clean": "ali@lums.edu.pk",
+            "email_clean": "ali@university.edu",
             "data": {
-                "RollNumber": "25100001",
+                "RollNumber": "2026-CS-101",
                 "CourseName": "CS 300",
                 "MeetingTime": "Monday 10 AM"
             }
         }
         template = "Hi {Name} (Roll: {RollNumber}), your {CourseName} class is at {MeetingTime}."
         rendered = render_message_template(template, contact)
-        self.assertEqual(rendered, "Hi Ali Khan (Roll: 25100001), your CS 300 class is at Monday 10 AM.")
+        self.assertEqual(rendered, "Hi Ali Khan (Roll: 2026-CS-101), your CS 300 class is at Monday 10 AM.")
 
     def test_whatsapp_url_generation(self):
         phone = "923001234567"
@@ -57,16 +58,29 @@ class TestAutomationCore(unittest.TestCase):
         self.assertTrue(url.startswith("https://wa.me/923001234567?text="))
         self.assertIn("Hello%20Ali", url)
 
-    def test_sample_generation_and_loading(self):
-        excel_path, csv_path = generate_sample_files(".")
-        contacts, columns, detected = load_contacts_file(excel_path)
-        self.assertEqual(len(contacts), 5)
-        self.assertIn("Name", columns)
-        self.assertIn("Phone", columns)
-        self.assertIn("Email", columns)
-        self.assertEqual(contacts[0]["name"], "Ali Khan")
-        self.assertEqual(contacts[0]["phone_clean"], "923001234567")
-        self.assertEqual(contacts[0]["email_clean"], "25100001@lums.edu.pk")
+    def test_contacts_file_loading(self):
+        # Create a clean temporary Excel test file
+        df = pd.DataFrame([
+            {"Name": "Ali Khan", "Phone": "+92 300 1234567", "Email": "ali.khan@gmail.com", "Campus ID": "2017110021"}
+        ])
+        with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as f:
+            temp_path = f.name
+            df.to_excel(temp_path, index=False)
+
+        try:
+            contacts, columns, detected = load_contacts_file(temp_path)
+            self.assertEqual(len(contacts), 1)
+            self.assertIn("Name", columns)
+            self.assertIn("Phone", columns)
+            self.assertIn("Email", columns)
+            self.assertEqual(contacts[0]["name"], "Ali Khan")
+            self.assertEqual(contacts[0]["phone_clean"], "923001234567")
+            self.assertEqual(contacts[0]["email_clean"], "ali.khan@gmail.com")
+        finally:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
 
 if __name__ == "__main__":
     unittest.main()
+
+

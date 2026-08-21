@@ -26,6 +26,10 @@ DEFAULT_REPLY_TO = os.getenv("DEFAULT_REPLY_TO", "")
 # WhatsApp Configuration
 DEFAULT_COUNTRY_CODE = os.getenv("DEFAULT_COUNTRY_CODE", "92")  # Pakistan +92 by default
 
+# Google Gemini AI API Key
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+
 # Upload directory
 UPLOAD_DIR = BASE_DIR / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
+

@@ -3,6 +3,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.utils import formataddr
+from email.header import Header
 from typing import Dict, Any, Optional
 
 
@@ -67,8 +68,9 @@ class SMTPMailHandler:
 
         try:
             msg = MIMEMultipart("alternative")
-            msg["Subject"] = subject
-            msg["From"] = formataddr((self.from_name, self.username))
+            msg["Subject"] = Header(subject, "utf-8")
+            from_display = str(Header(self.from_name, "utf-8")) if self.from_name else ""
+            msg["From"] = formataddr((from_display, self.username))
             msg["To"] = to_email.strip()
 
             if self.reply_to:
@@ -96,7 +98,7 @@ class SMTPMailHandler:
                         server.starttls()
 
                 server.login(self.username, self.password)
-                server.sendmail(self.username, [to_email.strip()], msg.as_string())
+                server.send_message(msg)
             finally:
                 if server:
                     try:

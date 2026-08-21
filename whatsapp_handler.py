@@ -6,7 +6,8 @@ from typing import Dict, Any, List, Optional
 
 def generate_whatsapp_url(phone_clean: str, message: str) -> str:
     """
-    Generates standard WhatsApp Click-to-Chat URL (https://wa.me/<number>?text=<encoded_msg>).
+    Generates standard WhatsApp Click-to-Chat URL.
+    Uses UTF-8 URL encoding to ensure emojis (e.g. 👋, 🚀, 🎉) are preserved without corruption.
     """
     if not phone_clean:
         return ""
@@ -15,7 +16,7 @@ def generate_whatsapp_url(phone_clean: str, message: str) -> str:
     if not digits:
         return ""
 
-    encoded_text = urllib.parse.quote(message.strip())
+    encoded_text = urllib.parse.quote(str(message).strip(), encoding="utf-8", safe="")
     return f"https://wa.me/{digits}?text={encoded_text}"
 
 
@@ -28,7 +29,7 @@ def generate_whatsapp_app_url(phone_clean: str, message: str) -> str:
     digits = "".join(filter(str.isdigit, str(phone_clean)))
     if not digits:
         return ""
-    encoded_text = urllib.parse.quote(message.strip())
+    encoded_text = urllib.parse.quote(str(message).strip(), encoding="utf-8", safe="")
     return f"whatsapp://send?phone={digits}&text={encoded_text}"
 
 
