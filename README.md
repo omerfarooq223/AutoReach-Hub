@@ -1,105 +1,218 @@
-# 🚀 AutoReach Hub - Smart Multi-Channel Dispatcher
+# 🚀 AutoReach Hub — Smart Multi-Channel Outreach & Automation
 
-An enterprise-ready automation suite designed to read Excel/CSV contact files, clean and extract phone numbers and email addresses, generate smart copy with **Google Gemini AI**, and dispatch personalized messages via:
-1. **Microsoft 365 / Institutional Email** (via Microsoft Graph API & Device Code OAuth2)
-2. **Standard SMTP Email** (Gmail App Passwords, custom SMTP servers, with custom `Reply-To`)
-3. **WhatsApp Click-to-Chat & Batch Launcher** (`wa.me` links pre-filled with dynamic text)
+<div align="center">
+
+[![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![Flask](https://img.shields.io/badge/Flask-3.0+-000000?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
+[![Google Gemini](https://img.shields.io/badge/Google%20Gemini-AI%20Powered-8E75B2?style=for-the-badge&logo=google-gemini&logoColor=white)](https://ai.google.dev/)
+[![Microsoft 365](https://img.shields.io/badge/Microsoft%20365-OAuth2%20SSO-0078D4?style=for-the-badge&logo=microsoft&logoColor=white)](https://developer.microsoft.com/graph)
+[![WhatsApp](https://img.shields.io/badge/WhatsApp-Click--to--Chat-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://whatsapp.com)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
+
+<p align="center">
+  <strong>An enterprise-grade, privacy-first automation platform that streamlines multi-category contact management, generates high-converting AI cold copy, and dispatches personalized emails and WhatsApp messages at scale.</strong>
+</p>
+
+[Explore Features](#-key-features) • [Dashboard Tour](#-visual-walkthrough) • [Quick Start](#-quick-start) • [Configuration](#%EF%B8%8F-configuration) • [Architecture](#-architecture)
+
+</div>
 
 ---
 
-## ✨ Features
+## 📸 Visual Walkthrough
 
-- **🪄 Google Gemini AI Assistant:** Integrated AI Copywriter to generate personalized Email Subject lines, Email Bodies, and WhatsApp messages in seconds based on custom prompts and selectable tones (Professional, Friendly, Urgent, Academic, Persuasive).
-- **📊 Smart Column Detection & Normalizer:** Auto-detects `Name`, `Phone`, and `Email` columns from any `.xlsx`, `.xls`, or `.csv` file.
-- **🌍 International Phone Formatting:** Converts local numbers (e.g. `03001234567` or `0300-1234567`) to international digits (`923001234567`) while supporting global country codes (+1, +44, +971, etc.).
-- **🏷️ Dynamic Message Templating:** Use any column header as a placeholder (e.g., `{Name}`, `{Email}`, `{RollNumber}`, `{Department}`, `{MeetingTime}`, `{DueAmount}`).
-- **🔐 Microsoft 365 OAuth2 Integration:** Seamless SSO & MFA authentication via Microsoft Device Code Flow (`microsoft.com/devicelogin`). Sent emails are directly recorded in your official **Sent Items** folder.
-- **💬 WhatsApp Direct Dispatch:** One-click launch of WhatsApp Web or Desktop with personalized pre-filled messages—no ban risk.
-- **📱 Universal Compatibility:** Responsive design optimized for Mac, Windows, Linux, Android, and iOS (iPhone/iPad).
-- **🖥️ Dual Interfaces:** Modern Glassmorphic Web Dashboard UI + Command-Line CLI tool.
+### 1. Modern Glassmorphic Dashboard & Multi-Channel Dispatcher
+Intuitive 3-step workflow: Upload roster, generate personalized messages with Gemini AI, and execute targeted campaigns via Microsoft 365 or WhatsApp.
+
+<div align="center">
+  <img src="./docs/screenshots/dashboard_overview.png" alt="AutoReach Hub Main Dashboard" width="100%" style="border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);">
+</div>
+
+<br/>
+
+### 2. Live Dynamic Preview & Real-Time Dispatch Terminal
+Inspect per-contact variable substitutions in real-time (`{Name}`, `{CourseName}`, `{MeetingTime}`) with live terminal logging and deliverability health checks.
+
+<div align="center">
+  <img src="./docs/screenshots/category_and_campaign.png" alt="Live Dynamic Preview and Activity Console" width="100%" style="border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);">
+</div>
 
 ---
 
-## 🛠️ Quick Start
+## ✨ Key Features
 
-### 1. Set Up Virtual Environment & Dependencies
+| Feature | Description |
+| :--- | :--- |
+| **🪄 Google Gemini AI Assistant** | Integrated copywriter generating contextual subject lines, email bodies, and WhatsApp messages with selectable tone presets (*Professional, Friendly, Urgent, Academic, Persuasive*). |
+| **📁 Category Management** | Tag and group contacts dynamically into custom categories (*e.g., VIP, Leads, Students, Partners*) with multi-category filtering and selective batch targeting. |
+| **🔐 Microsoft 365 Graph API** | Native SSO & MFA authentication via Microsoft Device Code Flow (`microsoft.com/devicelogin`). Sent emails appear directly in your official institutional **Sent Items** mailbox. |
+| **⚡ SMTP Multi-Provider** | Support for Gmail App Passwords and custom SMTP relays with customizable `From Name` and `Reply-To` headers. |
+| **💬 UTF-8 WhatsApp Launcher** | Generates zero-ban-risk `wa.me` links with UTF-8 URL encoding, fully preserving emojis (👋, 🚀, 🎉) and international formatting. |
+| **🩺 Phone & Email Health** | Uses Google's `libphonenumber` to auto-normalize international prefixes (+1, +44, +92, etc.) and highlight malformed records. |
+| **🏷️ Dynamic Variable Engine** | Use any column from your Excel or CSV as a tag (`{Name}`, `{Email}`, `{RollNumber}`, `{Department}`, `{DueAmount}`) with instantaneous live preview. |
+| **📱 Mobile-Ready Responsive UI** | Control campaigns on your local Wi-Fi from iPhone, iPad, or Android devices with native WhatsApp app deep-linking. |
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+- **Python 3.9+** installed on your system.
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/omerfarooq223/AutoReach-Hub.git
+cd AutoReach-Hub
+```
+
+### 2. One-Click Launchers
+
+#### 🍎 macOS & 🐧 Linux:
+```bash
+chmod +x run.sh
+./run.sh
+```
+
+#### 🪟 Windows:
+```cmd
+run.bat
+```
+
+> **Note:** The 1-click launcher automatically creates `.venv`, installs dependencies from `requirements.txt`, opens your default browser at `http://127.0.0.1:8080`, and runs the server.
+
+---
+
+### Manual Setup (Alternative)
 
 ```bash
-# Create and activate virtual environment
+# 1. Create and activate virtual environment
 python3 -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate       # On Windows use: .venv\Scripts\activate
 
-# Install requirements
+# 2. Install dependencies
 pip install -r requirements.txt
-```
 
-### 2. Configure Gemini AI API Key (Optional)
-Create a `.env` file or enter it in the Web UI:
-```env
-GEMINI_API_KEY=your_gemini_api_key_here
-```
-
-### 3. Generate Sample Contacts (Optional)
-
-```bash
-python3 create_sample_excel.py
-```
-
----
-
-## 🖥️ Method 1: Interactive Web Dashboard (Recommended)
-
-Start the local web application:
-
-```bash
-./run.sh          # on Mac / Linux
-run.bat           # on Windows
-```
-Or manually:
-```bash
+# 3. Start the Flask application
 python3 app.py
 ```
-Then open your browser at **`http://127.0.0.1:8080`**.
-
-### Using the Web Dashboard:
-1. **Google Gemini AI Assistant:** Enter a prompt (e.g. *"Draft an urgent fee payment reminder with discount details"*) and click **"Generate Drafts"**.
-2. **Sign in with Microsoft 365 (M365):** Click **"Microsoft 365: Connect"** in the top bar. Copy the one-time code and authenticate at `microsoft.com/devicelogin`.
-3. **Load Contacts:** Drag and drop your `.xlsx`/`.csv` file or click **"Load Sample Data"**.
-4. **Dispatch:**
-   - Click **"Send All Emails"** to dispatch batch emails.
-   - Click **"Launch All WhatsApp"** to open WhatsApp chats with pre-filled messages.
-   - Or trigger single actions row-by-row in the table.
+Visit **`http://127.0.0.1:8080`** in your browser.
 
 ---
 
-## 📱 Mobile Access (Android / iPhone)
+## ⚙️ Configuration
 
-While running on your computer, open your mobile browser and go to:
-👉 **`http://<YOUR_COMPUTER_IP>:8080`** (e.g., `http://192.168.100.198:8080`)
-- Tapping **"WA"** launches the native **WhatsApp mobile app** with pre-filled text!
+Create a `.env` file in the root directory (copied from [`.env.example`](.env.example)):
+
+```env
+# Google Gemini AI API Key (for smart AI message composer)
+GEMINI_API_KEY=your_gemini_api_key_here
+
+# Microsoft 365 / Graph API Configuration (Device Code Flow)
+MS_CLIENT_ID=04b07795-8ddb-461a-bbee-02f9e1bf7b46
+MS_AUTHORITY=https://login.microsoftonline.com/organizations
+
+# SMTP Email Configuration (Gmail / Custom SMTP)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USE_SSL=false
+SMTP_USE_TLS=true
+SMTP_USERNAME=your_email@gmail.com
+SMTP_PASSWORD=your_gmail_app_password
+DEFAULT_FROM_NAME=Academic / Admin Department
+DEFAULT_REPLY_TO=contact@institution.edu
+
+# WhatsApp Defaults
+DEFAULT_COUNTRY_CODE=92
+```
+
+> 💡 **Tip:** You can also enter and test your **Gemini API Key** and **SMTP credentials** directly inside the web UI Settings Modal.
 
 ---
 
-## 📁 File Structure
+## 📖 Step-by-Step Workflow
+
+```mermaid
+graph LR
+    A[Upload Excel/CSV] --> B[Smart Column Detection]
+    B --> C[Validate & Categorize]
+    C --> D[AI Copywriting with Gemini]
+    D --> E[Live Per-Contact Preview]
+    E --> F1[Dispatch via M365 / SMTP]
+    E --> F2[Launch WhatsApp Web/App]
+```
+
+1. **Upload Roster:** Drag & drop any `.xlsx`, `.xls`, or `.csv` contact spreadsheet. AutoReach Hub automatically maps columns (`Name`, `Phone`, `Email`, `Category`).
+2. **Assign Categories:** Filter or bulk-assign contacts to categories for targeted segmentation.
+3. **Draft with Gemini AI:** Select a tone (*Professional, Friendly, Urgent, Persuasive*), describe your campaign objective, and click **Generate Drafts with Gemini**.
+4. **Inspect Live Previews:** Slide through individual contacts to inspect real-time variable substitutions before sending.
+5. **Execute Dispatch:** 
+   - **Email:** One-click dispatch via authenticated Microsoft 365 OAuth2 or secure SMTP relay.
+   - **WhatsApp:** Click-to-chat triggers native WhatsApp desktop/web applications with pre-filled, personalized text.
+
+---
+
+## 📱 Mobile Network Access
+
+AutoReach Hub binds to `0.0.0.0`, allowing you to operate campaigns from your smartphone or tablet over the same Wi-Fi network:
+
+1. Locate your computer's local IP address (e.g. `192.168.1.15`).
+2. Open your mobile browser: `http://192.168.1.15:8080`
+3. Tapping **"WA"** launches the native **WhatsApp mobile application** directly with the formatted message loaded!
+
+---
+
+## 🏗️ Project Architecture
 
 ```
-Automation/
-├── ai_handler.py            # Google Gemini AI Integration
-├── app.py                   # Flask Web Dashboard Backend
-├── cli.py                   # Standalone CLI Script
-├── config.py                # Configuration & Environment Handler
-├── excel_handler.py         # Parser, Column Matcher & Template Engine
-├── graph_mail_handler.py    # Microsoft Graph API & MSAL Auth Handler
-├── smtp_handler.py          # SMTP Email Dispatcher
-├── whatsapp_handler.py      # WhatsApp Link & Dispatch Engine
-├── create_sample_excel.py   # Sample Data Generator
-├── requirements.txt         # Dependencies
-├── .env.example             # Environment Variables Template
-├── run.sh                   # 1-Click macOS/Linux Launcher
-├── run.bat                  # 1-Click Windows Launcher
+AutoReach-Hub/
+├── ai_handler.py            # Google Gemini AI copy generation & prompt engine
+├── app.py                   # Flask REST API backend & static file server
+├── cli.py                   # Interactive Command-Line Interface (CLI)
+├── config.py                # Environment and application settings
+├── excel_handler.py         # Multi-category parser, column matcher & sanitization engine
+├── graph_mail_handler.py    # Microsoft Graph API OAuth2 Device Code dispatcher
+├── smtp_handler.py          # SMTP email handler with UTF-8 multi-part support
+├── whatsapp_handler.py      # WhatsApp Click-to-Chat URL generator with UTF-8 encoding
+├── test_automation.py       # Comprehensive unit test suite
+├── requirements.txt         # Core Python dependencies
+├── .env.example             # Template for environment configuration
+├── run.sh                   # 1-Click launcher for macOS & Linux
+├── run.bat                  # 1-Click launcher for Windows
 ├── templates/
-│   └── index.html           # Modern Web Dashboard Template
-└── static/
-    ├── style.css            # Dark Glassmorphism Styling
-    └── app.js               # Frontend Controller & Realtime Sync
+│   └── index.html           # Modern glassmorphic web dashboard
+├── static/
+│   ├── style.css            # Dark mode glassmorphism design system
+│   ├── app.js               # Frontend application controller
+│   ├── favicon.svg          # Brand favicon
+│   └── lucide.min.js        # Bundled offline Lucide icon set
+└── docs/
+    └── screenshots/         # Dashboard previews & visual assets
 ```
+
+---
+
+## 🧪 Running Unit Tests
+
+Run the built-in test suite to verify data normalization, category handling, and dispatch engines:
+
+```bash
+python3 -m unittest test_automation.py
+```
+
+---
+
+## 🛡️ Privacy & Compliance
+
+- **No Remote Database:** All contact lists, Excel files, and campaign logs are processed locally in your machine's memory and local files.
+- **Official API Auth:** Microsoft 365 integration uses standard Microsoft Device Code OAuth2 without storing passwords.
+- **Zero WhatsApp Ban Risk:** Uses standard `wa.me` Click-to-Chat protocol, ensuring 100% compliance with WhatsApp Terms of Service.
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+
+<div align="center">
+  <sub>Engineered with ❤️ by <strong>Muhammad Umar Farooq</strong></sub>
+</div>
