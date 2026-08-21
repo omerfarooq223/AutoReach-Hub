@@ -10,10 +10,10 @@
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 
 <p align="center">
-  <strong>An enterprise-grade, privacy-first automation platform that streamlines multi-category contact management, generates high-converting AI cold copy, and dispatches personalized emails and WhatsApp messages at scale.</strong>
+  <strong>An enterprise-grade, privacy-first automation platform that streamlines multi-category contact management, generates high-converting AI copy with Google Gemini, and dispatches personalized emails and WhatsApp messages at scale.</strong>
 </p>
 
-[Explore Features](#-key-features) • [Dashboard Tour](#-visual-walkthrough) • [Quick Start](#-quick-start) • [Configuration](#%EF%B8%8F-configuration) • [Architecture](#-architecture)
+[Explore Features](#-key-features) • [Visual Tour](#-visual-walkthrough) • [Quick Start](#-quick-start) • [CLI & API Usage](#-cli--programmatic-usage) • [Configuration](#%EF%B8%8F-configuration) • [Project Architecture](#%EF%B8%8F-project-architecture)
 
 </div>
 
@@ -22,7 +22,7 @@
 ## 📸 Visual Walkthrough
 
 ### 1. Modern Glassmorphic Dashboard & Multi-Channel Dispatcher
-Intuitive 3-step workflow: Upload roster, generate personalized messages with Gemini AI, and execute targeted campaigns via Microsoft 365 or WhatsApp.
+Intuitive 3-step workflow: Upload contact rosters, craft tailored multi-tone copy with Google Gemini AI, and execute targeted campaigns via Microsoft 365, SMTP, or WhatsApp.
 
 <div align="center">
   <img src="./docs/screenshots/dashboard_overview.png" alt="AutoReach Hub Main Dashboard" width="100%" style="border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);">
@@ -30,8 +30,8 @@ Intuitive 3-step workflow: Upload roster, generate personalized messages with Ge
 
 <br/>
 
-### 2. Live Dynamic Preview & Real-Time Dispatch Terminal
-Inspect per-contact variable substitutions in real-time (`{Name}`, `{CourseName}`, `{MeetingTime}`) with live terminal logging and deliverability health checks.
+### 2. Live Dynamic Variable Preview & Real-Time Dispatch Terminal
+Inspect per-contact placeholder replacements in real-time (`{Name}`, `{CourseName}`, `{MeetingTime}`) with live terminal logging and deliverability health checks.
 
 <div align="center">
   <img src="./docs/screenshots/category_and_campaign.png" alt="Live Dynamic Preview and Activity Console" width="100%" style="border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);">
@@ -44,7 +44,7 @@ Inspect per-contact variable substitutions in real-time (`{Name}`, `{CourseName}
 | Feature | Description |
 | :--- | :--- |
 | **🪄 Google Gemini AI Assistant** | Integrated copywriter generating contextual subject lines, email bodies, and WhatsApp messages with selectable tone presets (*Professional, Friendly, Urgent, Academic, Persuasive*). |
-| **📁 Category Management** | Tag and group contacts dynamically into custom categories (*e.g., VIP, Leads, Students, Partners*) with multi-category filtering and selective batch targeting. |
+| **📁 Category Management System** | Tag and group contacts dynamically into custom categories (*e.g., VIP, Leads, Students, Partners*) with multi-category filtering and selective batch targeting. |
 | **🔐 Microsoft 365 Graph API** | Native SSO & MFA authentication via Microsoft Device Code Flow (`microsoft.com/devicelogin`). Sent emails appear directly in your official institutional **Sent Items** mailbox. |
 | **⚡ SMTP Multi-Provider** | Support for Gmail App Passwords and custom SMTP relays with customizable `From Name` and `Reply-To` headers. |
 | **💬 UTF-8 WhatsApp Launcher** | Generates zero-ban-risk `wa.me` links with UTF-8 URL encoding, fully preserving emojis (👋, 🚀, 🎉) and international formatting. |
@@ -57,7 +57,7 @@ Inspect per-contact variable substitutions in real-time (`{Name}`, `{CourseName}
 ## 🚀 Quick Start
 
 ### Prerequisites
-- **Python 3.9+** installed on your system.
+- **Python 3.9+** installed on your machine.
 
 ### 1. Clone the Repository
 ```bash
@@ -87,16 +87,69 @@ run.bat
 ```bash
 # 1. Create and activate virtual environment
 python3 -m venv .venv
-source .venv/bin/activate       # On Windows use: .venv\Scripts\activate
+source .venv/bin/activate       # On Windows: .venv\Scripts\activate
 
 # 2. Install dependencies
 pip install -r requirements.txt
 
 # 3. Start the application (Web UI or CLI)
-python3 main.py                 # Launches Web Dashboard
-python3 main.py --cli --help    # Or run via Command-Line Interface
+python3 main.py                 # Launches Web Dashboard at http://127.0.0.1:8080
 ```
-Visit **`http://127.0.0.1:8080`** in your browser.
+
+---
+
+## 💻 CLI & Programmatic Usage
+
+AutoReach Hub includes a unified entry point (`main.py`) and modular Python package (`src/autoreach`).
+
+### Command-Line Interface (CLI)
+
+```bash
+# 1. Authenticate with Microsoft 365 (M365) via Device Code Flow
+python3 main.py --cli --login-m365
+
+# 2. Dry-Run / Preview contact messages without sending
+python3 main.py --cli -f contacts.xlsx --dry-run
+
+# 3. Batch Email Dispatch via Microsoft 365
+python3 main.py --cli -f contacts.xlsx --send-email --email-backend graph \
+  --subject "Official Update for {Name}" \
+  --email-body "Hello {Name},\n\nYour session is scheduled for {MeetingTime}."
+
+# 4. Batch Email Dispatch via SMTP (Gmail / Custom)
+python3 main.py --cli -f contacts.xlsx --send-email --email-backend smtp
+
+# 5. Open WhatsApp chats sequentially
+python3 main.py --cli -f contacts.xlsx --open-whatsapp --wa-delay 2.0
+```
+
+### Programmatic Python Package Import
+
+```python
+import sys
+from pathlib import Path
+sys.path.insert(0, "src")
+
+from autoreach.core import load_contacts_file, render_message_template, GeminiAIHandler
+from autoreach.dispatchers import MicrosoftGraphMailHandler, SMTPMailHandler, generate_whatsapp_url
+
+# 1. Load and normalize contacts
+contacts, columns, detected = load_contacts_file("contacts.xlsx", default_country_code="92")
+
+# 2. Generate copy with Gemini AI
+ai = GeminiAIHandler()
+copy = ai.generate_campaign_messages(
+    prompt="Reminder for orientation event on Friday",
+    columns=columns,
+    tone="Friendly"
+)
+
+# 3. Render and generate WhatsApp link
+contact = contacts[0]
+rendered_msg = render_message_template(copy["whatsapp_body"], contact)
+wa_url = generate_whatsapp_url(contact["phone_clean"], rendered_msg)
+print("WhatsApp Link:", wa_url)
+```
 
 ---
 
@@ -142,9 +195,9 @@ graph LR
     E --> F2[Launch WhatsApp Web/App]
 ```
 
-1. **Upload Roster:** Drag & drop any `.xlsx`, `.xls`, or `.csv` contact spreadsheet. AutoReach Hub automatically maps columns (`Name`, `Phone`, `Email`, `Category`).
+1. **Upload Roster:** Drag & drop any `.xlsx`, `.xls`, or `.csv` spreadsheet. AutoReach Hub auto-detects columns (`Name`, `Phone`, `Email`, `Category`).
 2. **Assign Categories:** Filter or bulk-assign contacts to categories for targeted segmentation.
-3. **Draft with Gemini AI:** Select a tone (*Professional, Friendly, Urgent, Persuasive*), describe your campaign objective, and click **Generate Drafts with Gemini**.
+3. **Draft with Gemini AI:** Select a tone (*Professional, Friendly, Urgent, Persuasive*), describe your objective, and click **Generate Drafts with Gemini**.
 4. **Inspect Live Previews:** Slide through individual contacts to inspect real-time variable substitutions before sending.
 5. **Execute Dispatch:** 
    - **Email:** One-click dispatch via authenticated Microsoft 365 OAuth2 or secure SMTP relay.
@@ -168,37 +221,39 @@ AutoReach Hub binds to `0.0.0.0`, allowing you to operate campaigns from your sm
 AutoReach-Hub/
 ├── src/
 │   └── autoreach/
-│       ├── __init__.py          # Package initialization
-│       ├── config.py            # Environment & app settings
-│       ├── app.py               # Flask REST backend server
-│       ├── cli.py               # Command-line interface
-│       ├── core/                # Data processing & AI
-│       │   ├── __init__.py
-│       │   ├── excel_handler.py # Excel/CSV parser, column matcher & category engine
-│       │   └── ai_handler.py    # Google Gemini AI prompt generation & copywriter
-│       ├── dispatchers/         # Multi-channel delivery providers
-│       │   ├── __init__.py
-│       │   ├── graph_mail.py    # Microsoft Graph API OAuth2 Device Code
-│       │   ├── smtp_mail.py     # SMTP multi-part & custom headers
-│       │   └── whatsapp.py      # WhatsApp Click-to-Chat & Batch URL engine
-│       ├── static/              # Dashboard UI stylesheets, scripts & icons
-│       │   ├── style.css
-│       │   ├── app.js
-│       │   ├── favicon.svg
-│       │   └── lucide.min.js
-│       └── templates/           # HTML dashboard templates
-│           └── index.html
+│       ├── __init__.py                # Package exports & version metadata
+│       ├── config.py                  # Environment & dynamic path configuration
+│       ├── app.py                     # Flask REST backend server & routes
+│       ├── cli.py                     # Standalone CLI interface
+│       ├── core/                      # Core business logic & AI engines
+│       │   ├── __init__.py            # Core exports
+│       │   ├── excel_handler.py       # Excel/CSV parser, column matcher & category engine
+│       │   └── ai_handler.py          # Google Gemini AI prompt generation & copywriter
+│       ├── dispatchers/               # Multi-channel delivery providers
+│       │   ├── __init__.py            # Dispatcher exports
+│       │   ├── graph_mail.py          # Microsoft Graph API OAuth2 Device Code
+│       │   ├── smtp_mail.py           # SMTP multi-part & custom headers
+│       │   └── whatsapp.py            # WhatsApp Click-to-Chat & Batch URL engine
+│       ├── static/                    # Dashboard UI stylesheets, scripts & icons
+│       │   ├── style.css              # Dark glassmorphism design system
+│       │   ├── app.js                 # Frontend application controller
+│       │   ├── favicon.svg            # Brand vector icon
+│       │   └── lucide.min.js          # Offline Lucide icon bundle
+│       └── templates/                 # Web dashboard templates
+│           └── index.html             # Glassmorphic web app UI
 ├── tests/
-│   ├── __init__.py
-│   └── test_automation.py       # Unit test suite
+│   ├── __init__.py                    # Test package marker
+│   └── test_automation.py             # Full unit test suite
 ├── docs/
-│   └── screenshots/             # Visual previews & documentation assets
-├── main.py                      # Unified root entrypoint (Web UI & CLI)
-├── requirements.txt             # Dependencies
-├── .env.example                 # Environment configuration template
-├── run.sh                       # 1-Click launcher for macOS & Linux
-├── run.bat                      # 1-Click launcher for Windows
-└── README.md                    # Project documentation
+│   └── screenshots/                   # Visual previews & documentation assets
+│       ├── dashboard_overview.png     # Dashboard overview screenshot
+│       └── category_and_campaign.png  # Live preview and console screenshot
+├── main.py                            # Unified root entrypoint (Web UI & CLI)
+├── requirements.txt                   # Core Python dependencies
+├── .env.example                       # Environment configuration template
+├── run.sh                             # 1-Click launcher for macOS & Linux
+├── run.bat                            # 1-Click launcher for Windows
+└── README.md                          # Project documentation
 ```
 
 ---
